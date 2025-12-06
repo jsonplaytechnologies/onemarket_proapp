@@ -1,0 +1,50 @@
+{
+  "expo": {
+    "name": "OneMarket Pro",
+    "slug": "onemarket-pro",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#2563EB"
+    },
+    "plugins": [
+      [
+        "expo-font",
+        {
+          "fonts": [
+            "node_modules/react-native-vector-icons/Fonts/Ionicons.ttf",
+            "node_modules/react-native-vector-icons/Fonts/Feather.ttf",
+            "node_modules/react-native-vector-icons/Fonts/MaterialCommunityIcons.ttf"
+          ]
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow OneMarket Pro to access your photos for ID verification and profile picture.",
+          "cameraPermission": "Allow OneMarket Pro to access your camera for ID verification and profile picture."
+        }
+      ]
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.onemarket.pro"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#2563EB"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.onemarket.pro"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}
