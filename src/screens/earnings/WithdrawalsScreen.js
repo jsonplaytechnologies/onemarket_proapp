@@ -245,7 +245,7 @@ const WithdrawalsScreen = ({ navigation }) => {
                     className="text-sm text-gray-500"
                     style={{ fontFamily: 'Poppins-Regular' }}
                   >
-                    {formatDate(withdrawal.createdAt)}
+                    {formatDate(withdrawal.created_at)}
                   </Text>
                 </View>
               </View>

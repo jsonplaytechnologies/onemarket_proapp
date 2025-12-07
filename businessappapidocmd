@@ -1,0 +1,1034 @@
+# OneMarket API Documentation - Business Role
+
+**Base URL:** `https://onemarket-backend.onrender.com`
+**Role:** `business`
+**Platform:** React Native Mobile App / Web Admin Panel
+
+---
+
+## Table of Contents
+
+1. [Authentication & Signup](#1-authentication--signup)
+2. [Business Profile Management](#2-business-profile-management)
+3. [Logo & Cover Image](#3-logo--cover-image)
+4. [Gallery Images](#4-gallery-images)
+5. [Operating Hours](#5-operating-hours)
+6. [Business Categories](#6-business-categories)
+7. [Notifications](#7-notifications)
+8. [Approval Workflow](#8-approval-workflow)
+9. [Public Business Directory](#9-public-business-directory)
+
+---
+
+## Important: Account Approval Process
+
+**Business accounts require admin approval before appearing in the directory.**
+
+### Approval Status Values:
+
+- `pending` - Newly registered, awaiting approval
+- `approved` - Business visible in directory
+- `rejected` - Account rejected (can reapply)
+
+### What Requires Approval:
+
+- Appearing in public business directory
+- Being searchable by users
+
+### What Works Without Approval:
+
+- Login/Authentication
+- Managing profile and images
+- Setting operating hours
+- Viewing notifications
+
+---
+
+## 1. Authentication & Signup
+
+### 1.1 Send OTP
+
+```
+POST /api/auth/send-otp
+```
+
+**Request Body:**
+
+```json
+{
+  "phone": "077123456",
+  "countryCode": "+241"
+}
+```
+
+**Important:** Business accounts MUST use Gabon phone numbers (+241).
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "OTP sent successfully",
+  "data": {
+    "expiresIn": 600,
+    "phone": "+241077123456"
+  }
+}
+```
+
+---
+
+### 1.2 Verify OTP
+
+```
+POST /api/auth/verify-otp
+```
+
+**Request Body:**
+
+```json
+{
+  "phone": "077123456",
+  "code": "123456",
+  "countryCode": "+241"
+}
+```
+
+---
+
+### 1.3 Signup as Business
+
+```
+POST /api/auth/signup
+```
+
+**Request Body:**
+
+```json
+{
+  "phone": "+241077123456",
+  "role": "business",
+  "profile": {
+    "businessName": "Libreville Auto Repairs",
+    "categoryId": "category-uuid",
+    "subcategoryId": "subcategory-uuid",
+    "description": "Professional auto repair services in Libreville",
+    "zoneId": "zone-uuid",
+    "subZoneId": "subzone-uuid",
+    "address": "123 Main Street, Centre-ville, Libreville"
+  }
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Account created successfully",
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "user": {
+      "id": "user-uuid",
+      "phone": "+241077123456",
+      "role": "business",
+      "isActive": true,
+      "isVerified": true,
+      "approvalStatus": "pending",
+      "createdAt": "2025-11-28T10:00:00.000Z",
+      "profile": {
+        "businessName": "Libreville Auto Repairs",
+        "description": "Professional auto repair services"
+      }
+    }
+  }
+}
+```
+
+---
+
+### 1.4 Get Current User
+
+```
+GET /api/auth/me
+```
+
+**Headers:**
+
+```
+Authorization: Bearer <token>
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "user-uuid",
+    "phone": "+241077123456",
+    "role": "business",
+    "isActive": true,
+    "isVerified": true,
+    "approvalStatus": "approved",
+    "rejectionReason": null,
+    "profile": {
+      "id": "business-profile-uuid",
+      "businessName": "Libreville Auto Repairs",
+      "logo": "https://cloudinary.com/logo.jpg",
+      "coverImage": "https://cloudinary.com/cover.jpg",
+      "categoryName": "Automotive",
+      "subcategoryName": "Auto Repair"
+    }
+  }
+}
+```
+
+---
+
+## 2. Business Profile Management
+
+### 2.1 Get Business Profile
+
+```
+GET /api/businesses/me
+```
+
+**Headers:**
+
+```
+Authorization: Bearer <token>
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "business-uuid",
+    "userId": "user-uuid",
+    "businessName": "Libreville Auto Repairs",
+    "description": "Professional auto repair services with 15 years experience. We specialize in all car brands.",
+    "logo": "https://cloudinary.com/logo.jpg",
+    "coverImage": "https://cloudinary.com/cover.jpg",
+    "categoryId": "category-uuid",
+    "categoryName": "Automotive",
+    "subcategoryId": "subcategory-uuid",
+    "subcategoryName": "Auto Repair",
+    "phone": "+241077123456",
+    "email": "contact@librevilleauto.com",
+    "website": "https://librevilleauto.com",
+    "zoneId": "zone-uuid",
+    "zoneName": "Centre-ville",
+    "subZoneId": "subzone-uuid",
+    "subZoneName": "Quartier Louis",
+    "address": "123 Main Street, Centre-ville, Libreville",
+    "latitude": 0.4162,
+    "longitude": 9.4673,
+    "operatingHours": {
+      "monday": { "open": "08:00", "close": "18:00", "isClosed": false },
+      "tuesday": { "open": "08:00", "close": "18:00", "isClosed": false },
+      "wednesday": { "open": "08:00", "close": "18:00", "isClosed": false },
+      "thursday": { "open": "08:00", "close": "18:00", "isClosed": false },
+      "friday": { "open": "08:00", "close": "18:00", "isClosed": false },
+      "saturday": { "open": "09:00", "close": "14:00", "isClosed": false },
+      "sunday": { "open": null, "close": null, "isClosed": true }
+    },
+    "galleryImages": [
+      {
+        "id": "img-uuid-1",
+        "url": "https://cloudinary.com/gallery1.jpg",
+        "createdAt": "2025-11-28T10:00:00.000Z"
+      },
+      {
+        "id": "img-uuid-2",
+        "url": "https://cloudinary.com/gallery2.jpg",
+        "createdAt": "2025-11-28T10:00:00.000Z"
+      }
+    ],
+    "isActive": true,
+    "createdAt": "2025-01-15T10:00:00.000Z"
+  }
+}
+```
+
+---
+
+### 2.2 Update Business Profile
+
+```
+PATCH /api/businesses/me
+```
+
+**Headers:**
+
+```
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+**Request Body:**
+
+```json
+{
+  "businessName": "Libreville Auto Repairs & Services",
+  "description": "Updated description with more services",
+  "categoryId": "category-uuid",
+  "subcategoryId": "subcategory-uuid",
+  "phone": "+241077123456",
+  "email": "info@librevilleauto.com",
+  "website": "https://librevilleauto.com",
+  "zoneId": "zone-uuid",
+  "subZoneId": "subzone-uuid",
+  "address": "456 New Address, Libreville",
+  "latitude": 0.42,
+  "longitude": 9.47
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Business profile updated successfully",
+  "data": {
+    "id": "business-uuid",
+    "businessName": "Libreville Auto Repairs & Services",
+    "description": "Updated description with more services",
+    "email": "info@librevilleauto.com"
+  }
+}
+```
+
+---
+
+## 3. Logo & Cover Image
+
+### 3.1 Upload Logo
+
+```
+PATCH /api/businesses/me
+```
+
+**Headers:**
+
+```
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+```
+
+**Request (Form Data):**
+
+```
+logo: [File] - Logo image (JPEG, PNG, WebP, max 5MB)
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Logo updated successfully",
+  "data": {
+    "logo": "https://cloudinary.com/new-logo.jpg"
+  }
+}
+```
+
+---
+
+### 3.2 Upload Cover Image
+
+```
+PATCH /api/businesses/me
+```
+
+**Headers:**
+
+```
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+```
+
+**Request (Form Data):**
+
+```
+coverImage: [File] - Cover image (JPEG, PNG, WebP, max 5MB)
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Cover image updated successfully",
+  "data": {
+    "coverImage": "https://cloudinary.com/new-cover.jpg"
+  }
+}
+```
+
+---
+
+### 3.3 Upload Both Logo and Cover
+
+```
+PATCH /api/businesses/me
+```
+
+**Headers:**
+
+```
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+```
+
+**Request (Form Data):**
+
+```
+logo: [File]
+coverImage: [File]
+businessName: "Updated Business Name"
+```
+
+**React Native Implementation:**
+
+```javascript
+import * as ImagePicker from 'expo-image-picker';
+
+const updateBusinessImages = async (logoUri, coverUri) => {
+  const formData = new FormData();
+
+  if (logoUri) {
+    formData.append('logo', {
+      uri: logoUri,
+      name: 'logo.jpg',
+      type: 'image/jpeg',
+    });
+  }
+
+  if (coverUri) {
+    formData.append('coverImage', {
+      uri: coverUri,
+      name: 'cover.jpg',
+      type: 'image/jpeg',
+    });
+  }
+
+  const response = await fetch(`${BASE_URL}/api/businesses/me`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'multipart/form-data',
+    },
+    body: formData,
+  });
+
+  return response.json();
+};
+```
+
+---
+
+## 4. Gallery Images
+
+### 4.1 Add Gallery Image
+
+```
+POST /api/businesses/me/images
+```
+
+**Headers:**
+
+```
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+```
+
+**Request (Form Data):**
+
+```
+image: [File] - Gallery image (JPEG, PNG, WebP, max 5MB)
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Image added to gallery",
+  "data": {
+    "id": "image-uuid",
+    "url": "https://cloudinary.com/gallery-image.jpg",
+    "createdAt": "2025-11-28T10:00:00.000Z"
+  }
+}
+```
+
+---
+
+### 4.2 Delete Gallery Image
+
+```
+DELETE /api/businesses/me/images/:imageId
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Image removed from gallery"
+}
+```
+
+---
+
+### React Native - Gallery Management
+
+```javascript
+const GalleryManager = () => {
+  const [gallery, setGallery] = useState([]);
+
+  const pickAndUploadImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      const formData = new FormData();
+      formData.append('image', {
+        uri: result.assets[0].uri,
+        name: 'gallery.jpg',
+        type: 'image/jpeg',
+      });
+
+      const response = await fetch(`${BASE_URL}/api/businesses/me/images`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setGallery([...gallery, data.data]);
+      }
+    }
+  };
+
+  const deleteImage = async (imageId) => {
+    const response = await fetch(
+      `${BASE_URL}/api/businesses/me/images/${imageId}`,
+      {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` },
+      }
+    );
+
+    const data = await response.json();
+    if (data.success) {
+      setGallery(gallery.filter((img) => img.id !== imageId));
+    }
+  };
+
+  return (
+    <View>
+      <FlatList
+        data={gallery}
+        horizontal
+        renderItem={({ item }) => (
+          <View>
+            <Image source={{ uri: item.url }} style={styles.galleryImage} />
+            <TouchableOpacity onPress={() => deleteImage(item.id)}>
+              <Text>Delete</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      />
+      <Button title='Add Image' onPress={pickAndUploadImage} />
+    </View>
+  );
+};
+```
+
+---
+
+## 5. Operating Hours
+
+### 5.1 Update Operating Hours
+
+```
+PATCH /api/businesses/me/hours
+```
+
+**Headers:**
+
+```
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+**Request Body:**
+
+```json
+{
+  "hours": {
+    "monday": { "open": "08:00", "close": "18:00", "isClosed": false },
+    "tuesday": { "open": "08:00", "close": "18:00", "isClosed": false },
+    "wednesday": { "open": "08:00", "close": "18:00", "isClosed": false },
+    "thursday": { "open": "08:00", "close": "18:00", "isClosed": false },
+    "friday": { "open": "08:00", "close": "18:00", "isClosed": false },
+    "saturday": { "open": "09:00", "close": "14:00", "isClosed": false },
+    "sunday": { "open": null, "close": null, "isClosed": true }
+  }
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Operating hours updated",
+  "data": {
+    "operatingHours": {
+      "monday": { "open": "08:00", "close": "18:00", "isClosed": false },
+      "tuesday": { "open": "08:00", "close": "18:00", "isClosed": false },
+      "wednesday": { "open": "08:00", "close": "18:00", "isClosed": false },
+      "thursday": { "open": "08:00", "close": "18:00", "isClosed": false },
+      "friday": { "open": "08:00", "close": "18:00", "isClosed": false },
+      "saturday": { "open": "09:00", "close": "14:00", "isClosed": false },
+      "sunday": { "open": null, "close": null, "isClosed": true }
+    }
+  }
+}
+```
+
+---
+
+### React Native - Hours Editor
+
+```javascript
+const HoursEditor = () => {
+  const [hours, setHours] = useState({
+    monday: { open: '08:00', close: '18:00', isClosed: false },
+    tuesday: { open: '08:00', close: '18:00', isClosed: false },
+    wednesday: { open: '08:00', close: '18:00', isClosed: false },
+    thursday: { open: '08:00', close: '18:00', isClosed: false },
+    friday: { open: '08:00', close: '18:00', isClosed: false },
+    saturday: { open: '09:00', close: '14:00', isClosed: false },
+    sunday: { open: null, close: null, isClosed: true },
+  });
+
+  const updateDay = (day, field, value) => {
+    setHours({
+      ...hours,
+      [day]: { ...hours[day], [field]: value },
+    });
+  };
+
+  const saveHours = async () => {
+    const response = await fetch(`${BASE_URL}/api/businesses/me/hours`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ hours }),
+    });
+    return response.json();
+  };
+
+  const days = [
+    'monday',
+    'tuesday',
+    'wednesday',
+    'thursday',
+    'friday',
+    'saturday',
+    'sunday',
+  ];
+
+  return (
+    <View>
+      {days.map((day) => (
+        <View key={day} style={styles.dayRow}>
+          <Text style={styles.dayName}>{day}</Text>
+          <Switch
+            value={!hours[day].isClosed}
+            onValueChange={(open) => updateDay(day, 'isClosed', !open)}
+          />
+          {!hours[day].isClosed && (
+            <>
+              <TextInput
+                value={hours[day].open}
+                onChangeText={(val) => updateDay(day, 'open', val)}
+                placeholder='Open'
+              />
+              <TextInput
+                value={hours[day].close}
+                onChangeText={(val) => updateDay(day, 'close', val)}
+                placeholder='Close'
+              />
+            </>
+          )}
+        </View>
+      ))}
+      <Button title='Save Hours' onPress={saveHours} />
+    </View>
+  );
+};
+```
+
+---
+
+## 6. Business Categories
+
+### 6.1 Get All Business Categories
+
+```
+GET /api/businesses/categories
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "cat-uuid-1",
+      "name": "Automotive",
+      "description": "Car services and repairs",
+      "iconUrl": "https://...",
+      "subcategories": [
+        { "id": "subcat-uuid-1", "name": "Auto Repair" },
+        { "id": "subcat-uuid-2", "name": "Car Wash" },
+        { "id": "subcat-uuid-3", "name": "Tire Shop" }
+      ]
+    },
+    {
+      "id": "cat-uuid-2",
+      "name": "Food & Dining",
+      "description": "Restaurants, cafes, and food services",
+      "iconUrl": "https://...",
+      "subcategories": [
+        { "id": "subcat-uuid-4", "name": "Restaurant" },
+        { "id": "subcat-uuid-5", "name": "Cafe" },
+        { "id": "subcat-uuid-6", "name": "Fast Food" }
+      ]
+    },
+    {
+      "id": "cat-uuid-3",
+      "name": "Health & Beauty",
+      "description": "Salons, spas, and wellness",
+      "iconUrl": "https://...",
+      "subcategories": [
+        { "id": "subcat-uuid-7", "name": "Hair Salon" },
+        { "id": "subcat-uuid-8", "name": "Spa" },
+        { "id": "subcat-uuid-9", "name": "Barber Shop" }
+      ]
+    }
+  ]
+}
+```
+
+---
+
+## 7. Notifications
+
+### 7.1 Get Notifications
+
+```
+GET /api/notifications
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "notif-uuid",
+      "title": "Account Approved",
+      "message": "Your business account has been approved",
+      "type": "account_approved",
+      "isRead": false,
+      "createdAt": "2025-11-28T12:00:00.000Z"
+    }
+  ]
+}
+```
+
+### Notification Types for Business:
+
+- `account_approved` - Account approved by admin
+- `account_rejected` - Account rejected by admin
+- `profile_update_reminder` - Reminder to complete profile
+
+---
+
+### 7.2 Get Unread Count
+
+```
+GET /api/notifications/unread-count
+```
+
+---
+
+### 7.3 Mark as Read
+
+```
+PATCH /api/notifications/:id/read
+```
+
+---
+
+### 7.4 Mark All as Read
+
+```
+PATCH /api/notifications/read-all
+```
+
+---
+
+## 8. Approval Workflow
+
+### Account States
+
+```
+[New Registration]
+       ↓
+    PENDING
+       ↓
+[Complete Profile + Add Images]
+       ↓
+[Admin Reviews]
+       ↓
+   APPROVED ←──or──→ REJECTED
+       ↓                  ↓
+[Visible in Directory]  [Can Reapply]
+```
+
+### Checking Approval Status
+
+```javascript
+const checkApprovalStatus = async () => {
+  const response = await fetch(`${BASE_URL}/api/auth/me`, {
+    headers: { 'Authorization': `Bearer ${token}` },
+  });
+  const data = await response.json();
+
+  switch (data.data.approvalStatus) {
+    case 'pending':
+      // Show "Pending Approval" screen
+      navigation.navigate('PendingApproval');
+      break;
+    case 'approved':
+      // Full access - visible in directory
+      navigation.navigate('BusinessHome');
+      break;
+    case 'rejected':
+      // Show rejection reason
+      navigation.navigate('AccountRejected', {
+        reason: data.data.rejectionReason,
+      });
+      break;
+  }
+};
+```
+
+---
+
+## 9. Public Business Directory
+
+These endpoints are accessible by all users to browse businesses.
+
+### 9.1 Search Businesses
+
+```
+GET /api/businesses
+```
+
+**Query Parameters:**
+
+- `categoryId` (optional): Filter by category
+- `subcategoryId` (optional): Filter by subcategory
+- `zoneId` (optional): Filter by zone
+- `subZoneId` (optional): Filter by sub-zone
+- `search` (optional): Search by name or description
+- `page` (optional): Page number
+- `limit` (optional): Items per page
+
+**Example:**
+
+```
+GET /api/businesses?categoryId=cat-uuid&zoneId=zone-uuid&search=auto
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "business-uuid",
+      "businessName": "Libreville Auto Repairs",
+      "description": "Professional auto repair services",
+      "logo": "https://cloudinary.com/logo.jpg",
+      "categoryName": "Automotive",
+      "subcategoryName": "Auto Repair",
+      "zoneName": "Centre-ville",
+      "subZoneName": "Quartier Louis",
+      "address": "123 Main Street",
+      "isOpen": true
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 15
+  }
+}
+```
+
+---
+
+### 9.2 Get Business Details (Public)
+
+```
+GET /api/businesses/:id
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "business-uuid",
+    "businessName": "Libreville Auto Repairs",
+    "description": "Professional auto repair services with 15 years experience",
+    "logo": "https://cloudinary.com/logo.jpg",
+    "coverImage": "https://cloudinary.com/cover.jpg",
+    "categoryName": "Automotive",
+    "subcategoryName": "Auto Repair",
+    "phone": "+241077123456",
+    "email": "contact@librevilleauto.com",
+    "website": "https://librevilleauto.com",
+    "zoneName": "Centre-ville",
+    "subZoneName": "Quartier Louis",
+    "address": "123 Main Street, Centre-ville, Libreville",
+    "latitude": 0.4162,
+    "longitude": 9.4673,
+    "operatingHours": {
+      "monday": { "open": "08:00", "close": "18:00", "isClosed": false },
+      "tuesday": { "open": "08:00", "close": "18:00", "isClosed": false },
+      "wednesday": { "open": "08:00", "close": "18:00", "isClosed": false },
+      "thursday": { "open": "08:00", "close": "18:00", "isClosed": false },
+      "friday": { "open": "08:00", "close": "18:00", "isClosed": false },
+      "saturday": { "open": "09:00", "close": "14:00", "isClosed": false },
+      "sunday": { "open": null, "close": null, "isClosed": true }
+    },
+    "galleryImages": [
+      { "id": "img-1", "url": "https://cloudinary.com/gallery1.jpg" },
+      { "id": "img-2", "url": "https://cloudinary.com/gallery2.jpg" }
+    ],
+    "isOpen": true
+  }
+}
+```
+
+---
+
+## Quick Reference - All Business Endpoints
+
+### Protected Endpoints (Requires Auth + Business Role)
+
+| Method | Endpoint                          | Description             |
+| ------ | --------------------------------- | ----------------------- |
+| POST   | `/api/auth/send-otp`              | Send OTP                |
+| POST   | `/api/auth/verify-otp`            | Verify OTP              |
+| POST   | `/api/auth/signup`                | Create business account |
+| GET    | `/api/auth/me`                    | Get current user        |
+| GET    | `/api/businesses/me`              | Get business profile    |
+| PATCH  | `/api/businesses/me`              | Update profile/images   |
+| PATCH  | `/api/businesses/me/hours`        | Update operating hours  |
+| POST   | `/api/businesses/me/images`       | Add gallery image       |
+| DELETE | `/api/businesses/me/images/:id`   | Delete gallery image    |
+| GET    | `/api/notifications`              | Get notifications       |
+| GET    | `/api/notifications/unread-count` | Get unread count        |
+| PATCH  | `/api/notifications/:id/read`     | Mark as read            |
+| PATCH  | `/api/notifications/read-all`     | Mark all read           |
+
+### Public Endpoints (No Auth Required)
+
+| Method | Endpoint                     | Description              |
+| ------ | ---------------------------- | ------------------------ |
+| GET    | `/api/businesses`            | Search businesses        |
+| GET    | `/api/businesses/categories` | Get business categories  |
+| GET    | `/api/businesses/:id`        | Get business details     |
+| GET    | `/api/zones`                 | Get all zones            |
+| GET    | `/api/zones/all`             | Get zones with sub-zones |
+
+---
+
+## Complete Profile Checklist
+
+For best visibility in the directory, ensure you have:
+
+- [ ] Business name
+- [ ] Category and subcategory selected
+- [ ] Description (detailed)
+- [ ] Logo uploaded
+- [ ] Cover image uploaded
+- [ ] Contact phone
+- [ ] Email address
+- [ ] Website (if available)
+- [ ] Zone and sub-zone selected
+- [ ] Full address
+- [ ] GPS coordinates (latitude/longitude)
+- [ ] Operating hours set
+- [ ] Gallery images (3-5 recommended)
+
+---
+
+## Error Handling
+
+### Standard Error Response
+
+```json
+{
+  "success": false,
+  "message": "Error description",
+  "errors": [
+    { "field": "businessName", "message": "Business name is required" }
+  ]
+}
+```
+
+### HTTP Status Codes
+
+| Code | Meaning                  |
+| ---- | ------------------------ |
+| 200  | Success                  |
+| 201  | Created                  |
+| 400  | Bad Request              |
+| 401  | Unauthorized             |
+| 403  | Forbidden / Not Approved |
+| 404  | Not Found                |
+| 500  | Server Error             |
+
+---
+
+**Document Version:** 1.0
+**Last Updated:** November 28, 2025
+**API Version:** 2.0.0

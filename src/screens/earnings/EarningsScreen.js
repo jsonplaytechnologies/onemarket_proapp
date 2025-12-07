@@ -13,27 +13,20 @@ import apiService from '../../services/api';
 import { API_ENDPOINTS } from '../../constants/api';
 import { COLORS } from '../../constants/colors';
 
-const PERIODS = [
-  { key: 'today', label: 'Today' },
-  { key: 'week', label: 'Week' },
-  { key: 'month', label: 'Month' },
-  { key: 'all', label: 'All' },
-];
 
 const EarningsScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [earnings, setEarnings] = useState(null);
-  const [selectedPeriod, setSelectedPeriod] = useState('month');
 
   useEffect(() => {
     fetchEarnings();
-  }, [selectedPeriod]);
+  }, []);
 
   const fetchEarnings = async () => {
     try {
       const response = await apiService.get(
-        `${API_ENDPOINTS.EARNINGS}?period=${selectedPeriod}`
+        `${API_ENDPOINTS.EARNINGS}?period=all`
       );
       if (response.success) {
         setEarnings(response.data);
@@ -126,13 +119,13 @@ const EarningsScreen = ({ navigation }) => {
                   className="text-white/60"
                   style={{ fontFamily: 'Poppins-Regular', fontSize: 11 }}
                 >
-                  Pending
+                  Total Earned
                 </Text>
                 <Text
                   className="text-white"
                   style={{ fontFamily: 'Poppins-SemiBold', fontSize: 16 }}
                 >
-                  {formatCurrency(earnings?.wallet?.pendingBalance)}
+                  {formatCurrency(earnings?.wallet?.totalEarnings)}
                 </Text>
               </View>
               <View className="flex-1">
@@ -181,32 +174,6 @@ const EarningsScreen = ({ navigation }) => {
             </View>
             <Ionicons name="chevron-forward" size={20} color="#D1D5DB" />
           </TouchableOpacity>
-        </View>
-
-        {/* Period Filter */}
-        <View className="px-6 mb-4">
-          <View className="flex-row bg-gray-100 rounded-xl p-1">
-            {PERIODS.map((period) => (
-              <TouchableOpacity
-                key={period.key}
-                className={`flex-1 py-2 rounded-lg ${
-                  selectedPeriod === period.key ? 'bg-white' : ''
-                }`}
-                onPress={() => setSelectedPeriod(period.key)}
-              >
-                <Text
-                  className="text-center"
-                  style={{
-                    fontFamily: 'Poppins-Medium',
-                    fontSize: 13,
-                    color: selectedPeriod === period.key ? '#1F2937' : '#9CA3AF',
-                  }}
-                >
-                  {period.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
         </View>
 
         {/* Earnings Summary */}

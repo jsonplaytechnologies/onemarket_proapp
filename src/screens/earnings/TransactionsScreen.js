@@ -71,10 +71,10 @@ const TransactionsScreen = ({ navigation }) => {
     }
   };
 
-  const formatCurrency = (amount) => {
+  const formatCurrency = (amount, isPositive) => {
     if (!amount && amount !== 0) return '0 XAF';
-    const prefix = amount >= 0 ? '+' : '';
-    return `${prefix}${amount.toLocaleString()} XAF`;
+    const prefix = isPositive ? '+' : '-';
+    return `${prefix}${Math.abs(amount).toLocaleString()} XAF`;
   };
 
   const formatDate = (dateString) => {
@@ -91,8 +91,10 @@ const TransactionsScreen = ({ navigation }) => {
   const getTransactionIcon = (type) => {
     switch (type) {
       case 'earning':
+      case 'credit':
         return { name: 'arrow-down', color: COLORS.success, bg: 'bg-green-100' };
       case 'withdrawal':
+      case 'debit':
         return { name: 'arrow-up', color: COLORS.error, bg: 'bg-red-100' };
       case 'commission':
         return { name: 'remove', color: COLORS.warning, bg: 'bg-yellow-100' };
@@ -103,7 +105,7 @@ const TransactionsScreen = ({ navigation }) => {
 
   const renderTransaction = ({ item }) => {
     const icon = getTransactionIcon(item.type);
-    const isPositive = item.amount >= 0;
+    const isPositive = item.type === 'credit' || item.type === 'earning';
 
     return (
       <TouchableOpacity
@@ -119,9 +121,9 @@ const TransactionsScreen = ({ navigation }) => {
             className="text-base font-medium text-gray-900"
             style={{ fontFamily: 'Poppins-Medium' }}
           >
-            {item.type === 'earning'
+            {item.type === 'earning' || item.type === 'credit'
               ? 'Job Completed'
-              : item.type === 'withdrawal'
+              : item.type === 'withdrawal' || item.type === 'debit'
               ? 'Withdrawal'
               : item.type === 'commission'
               ? 'Platform Fee'
@@ -132,7 +134,7 @@ const TransactionsScreen = ({ navigation }) => {
             style={{ fontFamily: 'Poppins-Regular' }}
             numberOfLines={1}
           >
-            {item.description || formatDate(item.createdAt)}
+            {item.description || formatDate(item.created_at)}
           </Text>
         </View>
 
@@ -142,7 +144,7 @@ const TransactionsScreen = ({ navigation }) => {
           }`}
           style={{ fontFamily: 'Poppins-SemiBold' }}
         >
-          {formatCurrency(item.amount)}
+          {formatCurrency(item.amount, isPositive)}
         </Text>
       </TouchableOpacity>
     );

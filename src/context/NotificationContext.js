@@ -22,7 +22,7 @@ const NotificationContext = createContext(null);
 
 export const NotificationProvider = ({ children }) => {
   const { isConnected, on, off } = useSocketContext();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -142,9 +142,9 @@ export const NotificationProvider = ({ children }) => {
     }
   }, []);
 
-  // Initial fetch on auth
+  // Initial fetch on auth (only if account is approved)
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && user?.approval_status === 'approved') {
       fetchUnreadCount();
       fetchUnreadChatsCount();
     } else {
@@ -152,7 +152,7 @@ export const NotificationProvider = ({ children }) => {
       setUnreadCount(0);
       setUnreadChatsCount(0);
     }
-  }, [isAuthenticated, fetchUnreadCount, fetchUnreadChatsCount]);
+  }, [isAuthenticated, user?.approval_status, fetchUnreadCount, fetchUnreadChatsCount]);
 
   // Socket event listeners
   useEffect(() => {
