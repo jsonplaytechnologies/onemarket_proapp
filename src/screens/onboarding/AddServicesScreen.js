@@ -8,6 +8,8 @@ import {
   ActivityIndicator,
   TextInput,
   Modal,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -300,8 +302,18 @@ const AddServicesScreen = ({ navigation }) => {
           </View>
         ))}
 
-        <View className="h-24" />
+        <View className="h-32" />
       </ScrollView>
+
+      {/* Save Button */}
+      <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-4">
+        <Button
+          title="Save & Continue"
+          onPress={() => navigation.goBack()}
+          disabled={myServices.length === 0}
+          icon={<Ionicons name="checkmark-circle-outline" size={20} color="#FFFFFF" />}
+        />
+      </View>
 
       {/* Price Modal */}
       <Modal
@@ -310,7 +322,10 @@ const AddServicesScreen = ({ navigation }) => {
         transparent={true}
         onRequestClose={() => setShowPriceModal(false)}
       >
-        <View className="flex-1 justify-end bg-black/50">
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          className="flex-1 justify-end bg-black/50"
+        >
           <View className="bg-white rounded-t-3xl px-6 pt-6 pb-8">
             <View className="flex-row items-center justify-between mb-6">
               <Text
@@ -362,7 +377,7 @@ const AddServicesScreen = ({ navigation }) => {
               loading={saving}
             />
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
   );

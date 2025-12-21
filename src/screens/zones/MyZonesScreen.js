@@ -109,6 +109,45 @@ const MyZonesScreen = ({ navigation }) => {
     return myZones.filter((z) => z.zone_id === zone.id).length;
   };
 
+  const areAllSubZonesSelected = (zone) => {
+    if (!zone.sub_zones || zone.sub_zones.length === 0) return false;
+    return zone.sub_zones.every((subZone) => isZoneAdded(zone.id, subZone.id));
+  };
+
+  const handleSelectAllSubZones = async (zone) => {
+    if (!zone.sub_zones || zone.sub_zones.length === 0) return;
+
+    const allSelected = areAllSubZonesSelected(zone);
+    setSaving(true);
+
+    try {
+      if (allSelected) {
+        // Deselect all sub-zones
+        const zonesToRemove = myZones.filter(
+          (z) => z.zone_id === zone.id && z.sub_zone_id
+        );
+        await Promise.all(zonesToRemove.map((z) => apiService.delete(API_ENDPOINTS.MY_ZONE(z.id))));
+      } else {
+        // Select all unselected sub-zones using bulk endpoint
+        const zonesToAdd = zone.sub_zones
+          .filter((subZone) => !isZoneAdded(zone.id, subZone.id))
+          .map((subZone) => ({
+            zoneId: zone.id,
+            subZoneId: subZone.id,
+          }));
+
+        if (zonesToAdd.length > 0) {
+          await apiService.post(API_ENDPOINTS.MY_ZONES_BULK, { zones: zonesToAdd });
+        }
+      }
+      fetchData();
+    } catch (error) {
+      Alert.alert('Error', error.message || 'Failed to update zones');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <View className="flex-1 bg-white items-center justify-center">
@@ -181,14 +220,14 @@ const MyZonesScreen = ({ navigation }) => {
                       className="text-base font-medium text-gray-900"
                       style={{ fontFamily: 'Poppins-Medium' }}
                     >
-                      {zone.zone_name}
+                      {zone.sub_zone_name || zone.zone_name}
                     </Text>
                     {zone.sub_zone_name && (
                       <Text
                         className="text-sm text-gray-500"
                         style={{ fontFamily: 'Poppins-Regular' }}
                       >
-                        {zone.sub_zone_name}
+                        {zone.zone_name}
                       </Text>
                     )}
                   </View>
@@ -290,6 +329,26 @@ const MyZonesScreen = ({ navigation }) => {
 
                 {isExpanded && hasSubZones && (
                   <View className="border-t border-gray-100">
+                    {/* Select All Option */}
+                    <TouchableOpacity
+                      className="flex-row items-center px-4 py-3 pl-14 border-b border-gray-100 bg-gray-50"
+                      onPress={() => handleSelectAllSubZones(zone)}
+                      disabled={saving}
+                    >
+                      <View className="flex-1">
+                        <Text
+                          className="text-sm text-primary font-medium"
+                          style={{ fontFamily: 'Poppins-Medium' }}
+                        >
+                          {areAllSubZonesSelected(zone) ? 'Deselect All' : 'Select All'}
+                        </Text>
+                      </View>
+                      <Ionicons
+                        name={areAllSubZonesSelected(zone) ? 'checkmark-done-circle' : 'checkmark-done-circle-outline'}
+                        size={22}
+                        color={areAllSubZonesSelected(zone) ? COLORS.success : COLORS.primary}
+                      />
+                    </TouchableOpacity>
                     {zone.sub_zones.map((subZone, index) => {
                       const isSubZoneAdded = isZoneAdded(zone.id, subZone.id);
                       return (

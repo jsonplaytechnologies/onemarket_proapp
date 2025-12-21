@@ -10,10 +10,12 @@ import {
   Modal,
   Linking,
   Image,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import apiService from '../../services/api';
+import apiService, { ApiError } from '../../services/api';
 import { API_ENDPOINTS } from '../../constants/api';
 import { COLORS } from '../../constants/colors';
 import { StatusBadge } from '../../components/bookings';
@@ -63,7 +65,17 @@ const BookingDetailsScreen = ({ navigation, route }) => {
       Alert.alert('Success', 'Booking accepted. You can now send a quotation.');
       fetchBookingDetails();
     } catch (error) {
-      Alert.alert('Error', error.message || 'Failed to accept booking');
+      if (error.code === 'RATE_LIMITED') {
+        Alert.alert(
+          'Please Wait',
+          `Too many requests. Try again in ${error.retryAfter} seconds.`
+        );
+      } else if (error.code === 'VALIDATION_ERROR') {
+        const errorMsg = error.errors?.map(e => e.msg).join('\n') || error.message;
+        Alert.alert('Validation Error', errorMsg);
+      } else {
+        Alert.alert('Error', error.message || 'Failed to accept booking');
+      }
     } finally {
       setActionLoading(false);
     }
@@ -84,7 +96,17 @@ const BookingDetailsScreen = ({ navigation, route }) => {
       Alert.alert('Booking Rejected', 'The booking has been rejected.');
       navigation.goBack();
     } catch (error) {
-      Alert.alert('Error', error.message || 'Failed to reject booking');
+      if (error.code === 'RATE_LIMITED') {
+        Alert.alert(
+          'Please Wait',
+          `Too many requests. Try again in ${error.retryAfter} seconds.`
+        );
+      } else if (error.code === 'VALIDATION_ERROR') {
+        const errorMsg = error.errors?.map(e => e.msg).join('\n') || error.message;
+        Alert.alert('Validation Error', errorMsg);
+      } else {
+        Alert.alert('Error', error.message || 'Failed to reject booking');
+      }
     } finally {
       setActionLoading(false);
     }
@@ -105,7 +127,17 @@ const BookingDetailsScreen = ({ navigation, route }) => {
       Alert.alert('Success', 'Quotation sent to customer');
       fetchBookingDetails();
     } catch (error) {
-      Alert.alert('Error', error.message || 'Failed to send quotation');
+      if (error.code === 'RATE_LIMITED') {
+        Alert.alert(
+          'Please Wait',
+          `Too many requests. Try again in ${error.retryAfter} seconds.`
+        );
+      } else if (error.code === 'VALIDATION_ERROR') {
+        const errorMsg = error.errors?.map(e => e.msg).join('\n') || error.message;
+        Alert.alert('Validation Error', errorMsg);
+      } else {
+        Alert.alert('Error', error.message || 'Failed to send quotation');
+      }
     } finally {
       setActionLoading(false);
     }
@@ -118,7 +150,17 @@ const BookingDetailsScreen = ({ navigation, route }) => {
       Alert.alert('Success', 'Customer notified that you are on the way');
       fetchBookingDetails();
     } catch (error) {
-      Alert.alert('Error', error.message || 'Failed to update status');
+      if (error.code === 'RATE_LIMITED') {
+        Alert.alert(
+          'Please Wait',
+          `Too many requests. Try again in ${error.retryAfter} seconds.`
+        );
+      } else if (error.code === 'VALIDATION_ERROR') {
+        const errorMsg = error.errors?.map(e => e.msg).join('\n') || error.message;
+        Alert.alert('Validation Error', errorMsg);
+      } else {
+        Alert.alert('Error', error.message || 'Failed to update status');
+      }
     } finally {
       setActionLoading(false);
     }
@@ -131,7 +173,17 @@ const BookingDetailsScreen = ({ navigation, route }) => {
       Alert.alert('Success', 'Job start request sent. Waiting for customer confirmation.');
       fetchBookingDetails();
     } catch (error) {
-      Alert.alert('Error', error.message || 'Failed to request job start');
+      if (error.code === 'RATE_LIMITED') {
+        Alert.alert(
+          'Please Wait',
+          `Too many requests. Try again in ${error.retryAfter} seconds.`
+        );
+      } else if (error.code === 'VALIDATION_ERROR') {
+        const errorMsg = error.errors?.map(e => e.msg).join('\n') || error.message;
+        Alert.alert('Validation Error', errorMsg);
+      } else {
+        Alert.alert('Error', error.message || 'Failed to request job start');
+      }
     } finally {
       setActionLoading(false);
     }
@@ -144,7 +196,17 @@ const BookingDetailsScreen = ({ navigation, route }) => {
       Alert.alert('Success', 'Completion request sent. Waiting for customer confirmation.');
       fetchBookingDetails();
     } catch (error) {
-      Alert.alert('Error', error.message || 'Failed to request completion');
+      if (error.code === 'RATE_LIMITED') {
+        Alert.alert(
+          'Please Wait',
+          `Too many requests. Try again in ${error.retryAfter} seconds.`
+        );
+      } else if (error.code === 'VALIDATION_ERROR') {
+        const errorMsg = error.errors?.map(e => e.msg).join('\n') || error.message;
+        Alert.alert('Validation Error', errorMsg);
+      } else {
+        Alert.alert('Error', error.message || 'Failed to request completion');
+      }
     } finally {
       setActionLoading(false);
     }
@@ -595,7 +657,10 @@ const BookingDetailsScreen = ({ navigation, route }) => {
         transparent={true}
         onRequestClose={() => setShowQuotationModal(false)}
       >
-        <View className="flex-1 justify-end bg-black/50">
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          className="flex-1 justify-end bg-black/50"
+        >
           <View className="bg-white rounded-t-3xl px-6 pt-6 pb-8">
             <View className="flex-row items-center justify-between mb-6">
               <Text
@@ -640,7 +705,7 @@ const BookingDetailsScreen = ({ navigation, route }) => {
               loading={actionLoading}
             />
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Reject Modal */}
@@ -650,7 +715,10 @@ const BookingDetailsScreen = ({ navigation, route }) => {
         transparent={true}
         onRequestClose={() => setShowRejectModal(false)}
       >
-        <View className="flex-1 justify-end bg-black/50">
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          className="flex-1 justify-end bg-black/50"
+        >
           <View className="bg-white rounded-t-3xl px-6 pt-6 pb-8">
             <View className="flex-row items-center justify-between mb-6">
               <Text
@@ -688,7 +756,7 @@ const BookingDetailsScreen = ({ navigation, route }) => {
               variant="danger"
             />
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
   );

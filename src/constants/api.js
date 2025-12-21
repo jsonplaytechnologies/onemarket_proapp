@@ -11,6 +11,8 @@ export const API_ENDPOINTS = {
   PRO_PROFILE: '/api/pros/me/profile',
   PRO_AVAILABILITY: '/api/pros/me/availability',
   PRO_DOCUMENTS: '/api/pros/me/documents',
+  PRO_SUBMIT: '/api/pros/me/submit',
+  PRO_REAPPLY: '/api/pros/me/reapply',
 
   // Pro Services
   ALL_SERVICES: '/api/services',
@@ -20,6 +22,7 @@ export const API_ENDPOINTS = {
   // Zones
   ZONES_ALL: '/api/zones/all',
   MY_ZONES: '/api/pros/me/zones',
+  MY_ZONES_BULK: '/api/pros/me/zones/bulk',
   MY_ZONE: (id) => `/api/pros/me/zones/${id}`,
 
   // Bookings

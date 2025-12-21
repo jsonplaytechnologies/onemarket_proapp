@@ -19,12 +19,6 @@ const WelcomeScreen = ({ navigation }) => {
         {/* Logo */}
         <View className="items-center mb-12">
           <Logo size={100} showText={true} textSize="medium" />
-          <Text
-            className="text-gray-400 mt-1"
-            style={{ fontFamily: 'Poppins-Regular', fontSize: 12, letterSpacing: 2 }}
-          >
-            PRO
-          </Text>
         </View>
 
         {/* Features */}
@@ -75,12 +69,19 @@ const WelcomeScreen = ({ navigation }) => {
         </View>
       </View>
 
-      {/* Bottom Button */}
+      {/* Bottom Buttons */}
       <View className="px-8 pb-8">
         <Button
-          title="Get Started"
-          onPress={() => navigation.navigate('PhoneInput')}
-          icon={<Ionicons name="arrow-forward" size={20} color="#FFFFFF" />}
+          title="Sign In"
+          onPress={() => navigation.navigate('PhoneInput', { mode: 'signin' })}
+          icon={<Ionicons name="log-in-outline" size={20} color="#FFFFFF" />}
+        />
+        <View className="h-3" />
+        <Button
+          title="Sign Up"
+          onPress={() => navigation.navigate('PhoneInput', { mode: 'signup' })}
+          variant="outline"
+          icon={<Ionicons name="person-add-outline" size={20} color="#2563EB" />}
         />
       </View>
     </SafeAreaView>

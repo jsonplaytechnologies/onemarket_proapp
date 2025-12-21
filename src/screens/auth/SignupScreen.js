@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
-import apiService from '../../services/api';
+import apiService, { ApiError } from '../../services/api';
 import { API_ENDPOINTS } from '../../constants/api';
 import { useAuth } from '../../context/AuthContext';
 
@@ -54,7 +54,7 @@ const SignupScreen = ({ navigation, route }) => {
 
       if (response.success) {
         // Login and let AppNavigator handle navigation automatically
-        await login(response.data.token, response.data.user);
+        await login(response.data.token, response.data.user, response.data.refreshToken);
         Alert.alert(
           'Account Created!',
           'Your account has been created. Complete your profile to get approved.',
@@ -62,7 +62,35 @@ const SignupScreen = ({ navigation, route }) => {
         );
       }
     } catch (error) {
-      Alert.alert('Error', error.message || 'Failed to create account');
+      if (error.code === 'RATE_LIMITED') {
+        Alert.alert(
+          'Please Wait',
+          `Too many requests. Try again in ${error.retryAfter} seconds.`
+        );
+      } else if (error.code === 'VALIDATION_ERROR') {
+        // Handle field-level validation errors from server
+        if (error.errors && error.errors.length > 0) {
+          const newErrors = {};
+          error.errors.forEach(err => {
+            // Map API field paths to local state field names
+            if (err.path === 'profile.firstName') {
+              newErrors.firstName = err.msg;
+            } else if (err.path === 'profile.lastName') {
+              newErrors.lastName = err.msg;
+            } else if (err.path === 'profile.bio') {
+              newErrors.bio = err.msg;
+            }
+          });
+          setErrors(newErrors);
+          // Also show a general alert with all errors
+          const errorMsg = error.errors.map(e => e.msg).join('\n');
+          Alert.alert('Validation Error', errorMsg);
+        } else {
+          Alert.alert('Validation Error', error.message);
+        }
+      } else {
+        Alert.alert('Error', error.message || 'Failed to create account');
+      }
     } finally {
       setLoading(false);
     }
@@ -71,10 +99,16 @@ const SignupScreen = ({ navigation, route }) => {
   return (
     <SafeAreaView className="flex-1 bg-white">
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         className="flex-1"
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
-        <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        <ScrollView
+          className="flex-1"
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ flexGrow: 1 }}
+        >
           {/* Header */}
           <View className="px-6 pt-4 pb-6">
             <TouchableOpacity

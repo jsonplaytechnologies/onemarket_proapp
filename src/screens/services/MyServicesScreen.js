@@ -9,6 +9,8 @@ import {
   RefreshControl,
   TextInput,
   Modal,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -304,7 +306,10 @@ const MyServicesScreen = ({ navigation }) => {
         transparent={true}
         onRequestClose={() => setShowPriceModal(false)}
       >
-        <View className="flex-1 justify-end bg-black/50">
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          className="flex-1 justify-end bg-black/50"
+        >
           <View className="bg-white rounded-t-3xl px-6 pt-6 pb-8">
             <View className="flex-row items-center justify-between mb-6">
               <Text
@@ -356,7 +361,7 @@ const MyServicesScreen = ({ navigation }) => {
               loading={saving}
             />
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
   );

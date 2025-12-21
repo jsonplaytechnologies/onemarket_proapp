@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect, useContext, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import apiService from '../services/api';
 import { API_ENDPOINTS } from '../constants/api';
@@ -10,8 +10,18 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const navigationRef = useRef(null);
 
   useEffect(() => {
+    // Set up the onAuthExpired callback
+    apiService.setOnAuthExpired(() => {
+      // Clear local state
+      setToken(null);
+      setUser(null);
+      setIsAuthenticated(false);
+      // The navigation will automatically switch to Auth stack when isAuthenticated becomes false
+    });
+
     checkAuthStatus();
   }, []);
 
@@ -52,9 +62,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const login = async (tokenValue, userData) => {
+  const login = async (tokenValue, userData, refreshTokenValue = null) => {
     try {
-      await AsyncStorage.setItem('token', tokenValue);
+      // Use api service to store tokens
+      await apiService.storeTokens(tokenValue, refreshTokenValue);
       await AsyncStorage.setItem('user', JSON.stringify(userData));
       setToken(tokenValue);
       setUser(userData);
@@ -67,8 +78,8 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await AsyncStorage.removeItem('token');
-      await AsyncStorage.removeItem('user');
+      // Use api service to clear tokens (clears token, refreshToken, and user)
+      await apiService.clearTokens();
       setToken(null);
       setUser(null);
       setIsAuthenticated(false);

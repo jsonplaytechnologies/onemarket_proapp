@@ -12,7 +12,7 @@ import {
   Modal,
   Dimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import apiService from '../../services/api';
@@ -26,6 +26,7 @@ const { width: screenWidth } = Dimensions.get('window');
 const ChatScreen = ({ navigation, route }) => {
   const { bookingId, booking } = route.params;
   const { user, token } = useAuth();
+  const insets = useSafeAreaInsets();
   const flatListRef = useRef();
 
   const [message, setMessage] = useState('');
@@ -291,7 +292,7 @@ const ChatScreen = ({ navigation, route }) => {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-white" edges={['top', 'left', 'right']}>
       {/* Header */}
       <View className="flex-row items-center px-4 py-3 border-b border-gray-200">
         <TouchableOpacity
@@ -342,9 +343,9 @@ const ChatScreen = ({ navigation, route }) => {
 
       {/* Messages */}
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"
-        keyboardVerticalOffset={0}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 25}
       >
         <FlatList
           ref={flatListRef}
@@ -402,7 +403,10 @@ const ChatScreen = ({ navigation, route }) => {
         )}
 
         {/* Input */}
-        <View className="flex-row items-end px-4 py-3 border-t border-gray-200 bg-white">
+        <View
+          className="flex-row items-end px-4 pt-3 border-t border-gray-200 bg-white"
+          style={{ paddingBottom: Math.max(insets.bottom, 12) }}
+        >
           {/* Image Picker Buttons */}
           <TouchableOpacity
             className="w-10 h-10 items-center justify-center mr-1"

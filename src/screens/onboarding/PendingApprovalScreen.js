@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,20 +10,32 @@ const PendingApprovalScreen = ({ navigation }) => {
   const { user, logout, fetchUserProfile } = useAuth();
   const [checking, setChecking] = useState(false);
 
+  // Check if user is rejected and redirect automatically
+  useEffect(() => {
+    if (user?.approval_status === 'rejected') {
+      navigation.replace('AccountRejected');
+    }
+  }, [user?.approval_status]);
+
   const handleCheckStatus = async () => {
     setChecking(true);
     try {
       const updatedUser = await fetchUserProfile();
-      // If user is now approved, AppNavigator will automatically redirect to Main
-      // Only show "still pending" message if not approved
-      if (updatedUser?.approval_status !== 'approved') {
+
+      if (updatedUser?.approval_status === 'approved') {
+        // If approved, navigation happens automatically via AppNavigator
+        return;
+      } else if (updatedUser?.approval_status === 'rejected') {
+        // Navigate to rejection screen
+        navigation.replace('AccountRejected');
+      } else {
+        // Still pending
         Alert.alert(
           'Status Update',
           'Your application is still under review. Please check back later.',
           [{ text: 'OK' }]
         );
       }
-      // If approved, no alert needed - navigation happens automatically
     } catch (error) {
       Alert.alert('Error', 'Failed to check status. Please try again.');
     } finally {

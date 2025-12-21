@@ -14,6 +14,40 @@ import { API_ENDPOINTS } from '../../constants/api';
 import { COLORS } from '../../constants/colors';
 import { useNotifications } from '../../context/NotificationContext';
 
+// Pro-specific notification icons (outline style like user app)
+const NOTIFICATION_ICONS = {
+  new_booking: 'calendar-outline',
+  booking_cancelled: 'close-circle-outline',
+  payment_received: 'card-outline',
+  job_start_confirmed: 'checkmark-circle-outline',
+  job_complete_confirmed: 'checkmark-done-circle-outline',
+  new_review: 'star-outline',
+  withdrawal_approved: 'wallet-outline',
+  withdrawal_completed: 'wallet-outline',
+  withdrawal_failed: 'wallet-outline',
+  account_approved: 'checkmark-done-circle-outline',
+  account_rejected: 'close-circle-outline',
+  message: 'chatbubble-outline',
+  default: 'notifications-outline',
+};
+
+// Pro-specific notification colors
+const NOTIFICATION_COLORS = {
+  new_booking: '#3B82F6',
+  booking_cancelled: '#EF4444',
+  payment_received: '#10B981',
+  job_start_confirmed: '#10B981',
+  job_complete_confirmed: '#10B981',
+  new_review: '#F59E0B',
+  withdrawal_approved: '#10B981',
+  withdrawal_completed: '#10B981',
+  withdrawal_failed: '#EF4444',
+  account_approved: '#10B981',
+  account_rejected: '#EF4444',
+  message: '#3B82F6',
+  default: '#6B7280',
+};
+
 const NotificationsScreen = ({ navigation }) => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,23 +56,48 @@ const NotificationsScreen = ({ navigation }) => {
 
   useFocusEffect(
     useCallback(() => {
-      fetchNotifications();
-      // Mark all as read (updates both API and context unreadCount)
-      markAllAsRead();
-    }, [markAllAsRead])
+      fetchNotificationsAndMarkRead();
+    }, [])
   );
 
-  const fetchNotifications = async () => {
+  const fetchNotificationsAndMarkRead = async () => {
     try {
+      setLoading(true);
       const response = await apiService.get(API_ENDPOINTS.NOTIFICATIONS);
-      if (response.success) {
-        // API returns { notifications: [...], pagination: {...} }
-        setNotifications(response.data?.notifications || response.data || []);
+      if (response.success && response.data) {
+        const notificationsList = response.data.notifications || response.data || [];
+        const notifs = Array.isArray(notificationsList) ? notificationsList : [];
+
+        // Show notifications with their actual read state first
+        setNotifications(notifs);
+
+        // Mark all as read on server and update badge count after a delay
+        const hasUnread = notifs.some(n => !(n.is_read || n.isRead));
+        if (hasUnread) {
+          // Delay marking as read so user can see unread highlights
+          setTimeout(() => {
+            markAllAsRead();
+            // Also update local state to remove blue tint
+            setNotifications(prev => prev.map(n => ({ ...n, is_read: true, isRead: true })));
+          }, 1500);
+        }
       }
     } catch (error) {
       console.error('Error fetching notifications:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchNotifications = async () => {
+    try {
+      const response = await apiService.get(API_ENDPOINTS.NOTIFICATIONS);
+      if (response.success && response.data) {
+        const notificationsList = response.data.notifications || response.data || [];
+        setNotifications(Array.isArray(notificationsList) ? notificationsList : []);
+      }
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
     }
   };
 
@@ -49,53 +108,24 @@ const NotificationsScreen = ({ navigation }) => {
   };
 
   const handleNotificationPress = (notification) => {
-    // Handle both snake_case (API) and camelCase field names
     const bookingId = notification.booking_id || notification.bookingId;
     if (bookingId) {
       navigation.navigate('BookingDetails', { bookingId });
     }
   };
 
-  const getNotificationIcon = (type) => {
-    switch (type) {
-      case 'new_booking':
-        return { name: 'calendar', color: COLORS.primary };
-      case 'booking_cancelled':
-        return { name: 'close-circle', color: COLORS.error };
-      case 'payment_received':
-        return { name: 'card', color: COLORS.success };
-      case 'job_start_confirmed':
-      case 'job_complete_confirmed':
-        return { name: 'checkmark-circle', color: COLORS.success };
-      case 'new_review':
-        return { name: 'star', color: COLORS.warning };
-      case 'withdrawal_approved':
-      case 'withdrawal_completed':
-        return { name: 'wallet', color: COLORS.success };
-      case 'withdrawal_failed':
-        return { name: 'wallet', color: COLORS.error };
-      case 'account_approved':
-        return { name: 'checkmark-done-circle', color: COLORS.success };
-      case 'account_rejected':
-        return { name: 'close-circle', color: COLORS.error };
-      default:
-        return { name: 'notifications', color: COLORS.primary };
-    }
-  };
-
   const formatTime = (dateString) => {
     const date = new Date(dateString);
     const now = new Date();
-    const diff = now - date;
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
 
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-
-    if (minutes < 1) return 'Just now';
-    if (minutes < 60) return `${minutes}m ago`;
-    if (hours < 24) return `${hours}h ago`;
-    if (days < 7) return `${days}d ago`;
+    if (diffMins < 1) return 'Now';
+    if (diffMins < 60) return `${diffMins}m`;
+    if (diffHours < 24) return `${diffHours}h`;
+    if (diffDays < 7) return `${diffDays}d`;
 
     return date.toLocaleDateString('en-US', {
       month: 'short',
@@ -103,70 +133,82 @@ const NotificationsScreen = ({ navigation }) => {
     });
   };
 
+  const getIcon = (type) => NOTIFICATION_ICONS[type] || NOTIFICATION_ICONS.default;
+  const getColor = (type) => NOTIFICATION_COLORS[type] || NOTIFICATION_COLORS.default;
+
   const renderNotification = ({ item }) => {
-    const icon = getNotificationIcon(item.type);
     // Handle both snake_case (API) and camelCase field names
     const isRead = item.is_read || item.isRead;
     const createdAt = item.created_at || item.createdAt;
 
     return (
       <TouchableOpacity
-        className={`flex-row px-4 py-4 bg-white border-b border-gray-100 ${
-          !isRead ? 'bg-blue-50' : ''
-        }`}
-        onPress={() => handleNotificationPress(item)}
+        className={`flex-row items-start px-6 py-4 ${!isRead ? 'bg-blue-50' : 'bg-white'}`}
         activeOpacity={0.7}
+        onPress={() => handleNotificationPress(item)}
       >
         <View
-          className="w-10 h-10 rounded-full items-center justify-center mr-3"
-          style={{ backgroundColor: `${icon.color}20` }}
+          className="w-11 h-11 rounded-full items-center justify-center mr-4"
+          style={{ backgroundColor: `${getColor(item.type)}15` }}
         >
-          <Ionicons name={icon.name} size={20} color={icon.color} />
+          <Ionicons
+            name={getIcon(item.type)}
+            size={20}
+            color={getColor(item.type)}
+          />
         </View>
 
         <View className="flex-1">
+          <View className="flex-row items-start justify-between">
+            <Text
+              className={`text-sm flex-1 mr-2 ${
+                !isRead ? 'text-gray-900' : 'text-gray-600'
+              }`}
+              style={{ fontFamily: !isRead ? 'Poppins-SemiBold' : 'Poppins-Medium' }}
+              numberOfLines={1}
+            >
+              {item.title}
+            </Text>
+            <Text
+              className="text-xs text-gray-400"
+              style={{ fontFamily: 'Poppins-Regular' }}
+            >
+              {formatTime(createdAt)}
+            </Text>
+          </View>
+
           <Text
-            className="text-base font-medium text-gray-900"
-            style={{ fontFamily: 'Poppins-Medium' }}
-          >
-            {item.title}
-          </Text>
-          <Text
-            className="text-sm text-gray-600 mt-0.5"
+            className="text-sm text-gray-400 mt-1"
             style={{ fontFamily: 'Poppins-Regular' }}
             numberOfLines={2}
           >
             {item.message}
           </Text>
-          <Text
-            className="text-xs text-gray-400 mt-1"
-            style={{ fontFamily: 'Poppins-Regular' }}
-          >
-            {formatTime(createdAt)}
-          </Text>
         </View>
 
         {!isRead && (
-          <View className="w-2 h-2 bg-primary rounded-full self-center" />
+          <View className="w-2 h-2 rounded-full bg-primary mt-2 ml-2" />
         )}
       </TouchableOpacity>
     );
   };
 
   const renderEmptyState = () => (
-    <View className="flex-1 items-center justify-center px-6 py-16">
-      <Ionicons name="notifications-outline" size={64} color="#9CA3AF" />
+    <View className="flex-1 items-center justify-center px-6 py-20">
+      <View className="w-20 h-20 bg-gray-100 rounded-full items-center justify-center mb-6">
+        <Ionicons name="notifications-off-outline" size={36} color="#9CA3AF" />
+      </View>
       <Text
-        className="text-xl font-semibold text-gray-900 mt-4 text-center"
+        className="text-lg text-gray-900"
         style={{ fontFamily: 'Poppins-SemiBold' }}
       >
-        No Notifications
+        All Caught Up
       </Text>
       <Text
-        className="text-base text-gray-500 text-center mt-2"
+        className="text-sm text-gray-400 text-center mt-2"
         style={{ fontFamily: 'Poppins-Regular' }}
       >
-        You'll be notified about new bookings and updates here
+        New notifications will appear here
       </Text>
     </View>
   );
@@ -174,9 +216,9 @@ const NotificationsScreen = ({ navigation }) => {
   if (loading) {
     return (
       <View className="flex-1 bg-white">
-        <View className="bg-white border-b border-gray-200 px-6 pt-12 pb-4">
+        <View className="px-6 pt-14 pb-4">
           <Text
-            className="text-2xl font-bold text-gray-900"
+            className="text-2xl text-gray-900"
             style={{ fontFamily: 'Poppins-Bold' }}
           >
             Notifications
@@ -192,31 +234,32 @@ const NotificationsScreen = ({ navigation }) => {
   return (
     <View className="flex-1 bg-white">
       {/* Header */}
-      <View className="bg-white border-b border-gray-200 px-6 pt-12 pb-4">
+      <View className="px-6 pt-14 pb-4">
         <Text
-          className="text-2xl font-bold text-gray-900"
+          className="text-2xl text-gray-900"
           style={{ fontFamily: 'Poppins-Bold' }}
         >
           Notifications
         </Text>
       </View>
 
+      {/* Notifications List */}
       <FlatList
         data={notifications}
-        keyExtractor={(item) => item.id}
         renderItem={renderNotification}
+        keyExtractor={(item) => item.id}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
             colors={[COLORS.primary]}
+            tintColor={COLORS.primary}
           />
         }
         ListEmptyComponent={renderEmptyState}
-        contentContainerStyle={{
-          flexGrow: notifications.length === 0 ? 1 : undefined,
-        }}
+        contentContainerStyle={notifications.length === 0 ? { flex: 1 } : { paddingBottom: 20 }}
         showsVerticalScrollIndicator={false}
+        ItemSeparatorComponent={() => <View className="h-px bg-gray-100 mx-6" />}
       />
     </View>
   );

@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, Alert, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Button from '../../components/common/Button';
-import apiService from '../../services/api';
+import apiService, { ApiError } from '../../services/api';
 import { API_ENDPOINTS } from '../../constants/api';
 
 const MIN_PHONE_LENGTH = 8;
@@ -43,7 +43,18 @@ const PhoneInputScreen = ({ navigation }) => {
         });
       }
     } catch (error) {
-      Alert.alert('Error', error.message || 'Failed to send OTP');
+      if (error.code === 'RATE_LIMITED') {
+        Alert.alert(
+          'Please Wait',
+          `Too many requests. Try again in ${error.retryAfter} seconds.`
+        );
+      } else if (error.code === 'VALIDATION_ERROR') {
+        // Show field-level validation errors
+        const errorMsg = error.errors?.map(e => e.msg).join('\n') || error.message;
+        Alert.alert('Validation Error', errorMsg);
+      } else {
+        Alert.alert('Error', error.message || 'Failed to send OTP');
+      }
     } finally {
       setLoading(false);
     }
