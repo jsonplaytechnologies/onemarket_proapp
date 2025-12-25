@@ -4,7 +4,6 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  Switch,
   RefreshControl,
   ActivityIndicator,
 } from 'react-native';
@@ -16,19 +15,18 @@ import { useNotifications } from '../../context/NotificationContext';
 import apiService from '../../services/api';
 import { API_ENDPOINTS } from '../../constants/api';
 import { COLORS } from '../../constants/colors';
-import { BookingCard } from '../../components/bookings';
+import { BookingCard, RankingStatsCard } from '../../components/bookings';
 import Logo from '../../components/common/Logo';
 
 const HomeScreen = ({ navigation }) => {
   const { user, updateUser } = useAuth();
   const { unreadCount, refreshTrigger } = useNotifications();
 
-  const [isOnline, setIsOnline] = useState(user?.profile?.is_online || false);
   const [earnings, setEarnings] = useState(null);
   const [recentBookings, setRecentBookings] = useState([]);
+  const [rankingStats, setRankingStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [togglingStatus, setTogglingStatus] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -44,10 +42,10 @@ const HomeScreen = ({ navigation }) => {
 
   const fetchData = async () => {
     try {
-      const [earningsRes, bookingsRes, profileRes] = await Promise.all([
+      const [earningsRes, bookingsRes, rankingRes] = await Promise.all([
         apiService.get(`${API_ENDPOINTS.EARNINGS}?period=today`),
         apiService.get(`${API_ENDPOINTS.BOOKINGS}?limit=5`),
-        apiService.get(API_ENDPOINTS.PRO_PROFILE),
+        apiService.get(API_ENDPOINTS.MY_RANKING).catch(() => ({ success: false })),
       ]);
 
       if (earningsRes.success) {
@@ -58,8 +56,8 @@ const HomeScreen = ({ navigation }) => {
         setRecentBookings(bookingsRes.data || []);
       }
 
-      if (profileRes.success) {
-        setIsOnline(profileRes.data?.is_online || false);
+      if (rankingRes.success && rankingRes.data) {
+        setRankingStats(rankingRes.data);
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -74,30 +72,18 @@ const HomeScreen = ({ navigation }) => {
     setRefreshing(false);
   };
 
-  const toggleOnlineStatus = async (value) => {
-    setTogglingStatus(true);
-    try {
-      const response = await apiService.patch(API_ENDPOINTS.PRO_AVAILABILITY, {
-        isOnline: value,
-      });
-
-      if (response.success) {
-        setIsOnline(value);
-      }
-    } catch (error) {
-      console.error('Error toggling status:', error);
-    } finally {
-      setTogglingStatus(false);
-    }
-  };
-
   const formatCurrency = (amount) => {
     if (!amount && amount !== 0) return '0 XAF';
     return `${amount.toLocaleString()} XAF`;
   };
 
   const firstName = user?.profile?.first_name || user?.first_name || 'Pro';
-  const pendingBookings = recentBookings.filter((b) => b.status === 'pending');
+
+  // Show bookings requiring action
+  const ACTION_REQUIRED_STATUSES = ['waiting_approval', 'waiting_quote', 'paid'];
+  const actionRequiredBookings = recentBookings.filter((b) =>
+    ACTION_REQUIRED_STATUSES.includes(b.status)
+  );
 
   if (loading) {
     return (
@@ -154,30 +140,6 @@ const HomeScreen = ({ navigation }) => {
             >
               {firstName}
             </Text>
-          </View>
-
-          {/* Online Status Toggle */}
-          <View className="bg-gray-50 rounded-2xl p-4 flex-row items-center justify-between">
-            <View className="flex-row items-center">
-              <View
-                className={`w-3 h-3 rounded-full mr-3 ${
-                  isOnline ? 'bg-green-500' : 'bg-gray-300'
-                }`}
-              />
-              <Text
-                className="text-gray-800"
-                style={{ fontFamily: 'Poppins-Medium', fontSize: 15 }}
-              >
-                {isOnline ? 'Accepting jobs' : 'Offline'}
-              </Text>
-            </View>
-            <Switch
-              value={isOnline}
-              onValueChange={toggleOnlineStatus}
-              disabled={togglingStatus}
-              trackColor={{ false: '#E5E7EB', true: '#BBF7D0' }}
-              thumbColor={isOnline ? '#22C55E' : '#9CA3AF'}
-            />
           </View>
         </View>
 
@@ -283,24 +245,31 @@ const HomeScreen = ({ navigation }) => {
           </View>
         </View>
 
-        {/* New Booking Requests */}
-        {pendingBookings.length > 0 && (
+        {/* Phase 2: Ranking Stats Card */}
+        {rankingStats && (
+          <View className="px-6 mb-6">
+            <RankingStatsCard stats={rankingStats} />
+          </View>
+        )}
+
+        {/* Phase 2: Action Required Bookings */}
+        {actionRequiredBookings.length > 0 && (
           <View className="px-6 mb-6">
             <View className="flex-row items-center mb-4">
               <Text
                 className="text-gray-900"
                 style={{ fontFamily: 'Poppins-SemiBold', fontSize: 18 }}
               >
-                New Requests
+                Action Required
               </Text>
               <View className="bg-red-500 ml-2 w-6 h-6 rounded-full items-center justify-center">
                 <Text className="text-white text-xs" style={{ fontFamily: 'Poppins-Bold' }}>
-                  {pendingBookings.length}
+                  {actionRequiredBookings.length}
                 </Text>
               </View>
             </View>
 
-            {pendingBookings.map((booking) => (
+            {actionRequiredBookings.map((booking) => (
               <BookingCard
                 key={booking.id}
                 booking={booking}

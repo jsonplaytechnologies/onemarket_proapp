@@ -19,15 +19,20 @@ import { useSocketContext } from '../../context/SocketContext';
 
 const STATUS_FILTERS = [
   { key: 'all', label: 'All' },
-  { key: 'pending', label: 'New' },
+  { key: 'action_required', label: 'Action' },
   { key: 'active', label: 'Active' },
   { key: 'completed', label: 'Done' },
 ];
 
+// Statuses requiring immediate provider action
+const ACTION_REQUIRED_STATUSES = [
+  'waiting_approval',  // Need to accept/reject assignment
+  'waiting_quote',     // Need to send quote
+  'paid',              // Ready to start - mark "on the way"
+];
+
 const ACTIVE_STATUSES = [
-  'accepted',
-  'quotation_sent',
-  'paid',
+  'waiting_acceptance', // Quote sent, waiting for customer
   'on_the_way',
   'job_start_requested',
   'job_started',
@@ -60,21 +65,24 @@ const BookingsScreen = ({ navigation }) => {
   }, [refreshTrigger]);
 
   useEffect(() => {
-    if (isConnected) {
-      on('booking-status-changed', (data) => {
-        setBookings((prev) =>
-          prev.map((booking) =>
-            booking.id === data.bookingId
-              ? { ...booking, status: data.status, ...data }
-              : booking
-          )
-        );
-      });
+    const handleStatusChange = (data) => {
+      setBookings((prev) =>
+        prev.map((booking) =>
+          booking.id === data.bookingId
+            ? { ...booking, status: data.status, ...data }
+            : booking
+        )
+      );
+    };
 
-      return () => {
-        off('booking-status-changed');
-      };
+    if (isConnected) {
+      on('booking-status-changed', handleStatusChange);
     }
+
+    // Cleanup should always try to remove, even if socket disconnected
+    return () => {
+      off('booking-status-changed', handleStatusChange);
+    };
   }, [isConnected, on, off]);
 
   useEffect(() => {
@@ -119,8 +127,8 @@ const BookingsScreen = ({ navigation }) => {
     let filtered = [...bookings];
 
     switch (selectedFilter) {
-      case 'pending':
-        filtered = bookings.filter((b) => b.status === 'pending');
+      case 'action_required':
+        filtered = bookings.filter((b) => ACTION_REQUIRED_STATUSES.includes(b.status));
         break;
       case 'active':
         filtered = bookings.filter((b) => ACTIVE_STATUSES.includes(b.status));
@@ -153,8 +161,8 @@ const BookingsScreen = ({ navigation }) => {
 
   const getFilterCount = (filterKey) => {
     switch (filterKey) {
-      case 'pending':
-        return bookings.filter((b) => b.status === 'pending').length;
+      case 'action_required':
+        return bookings.filter((b) => ACTION_REQUIRED_STATUSES.includes(b.status)).length;
       case 'active':
         return bookings.filter((b) => ACTIVE_STATUSES.includes(b.status)).length;
       case 'completed':

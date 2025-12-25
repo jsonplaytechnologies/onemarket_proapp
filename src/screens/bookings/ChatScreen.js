@@ -24,8 +24,14 @@ import { useBookingSocket } from '../../hooks/useSocket';
 const { width: screenWidth } = Dimensions.get('window');
 
 const ChatScreen = ({ navigation, route }) => {
-  const { bookingId, booking } = route.params;
+  const { bookingId, booking = {} } = route.params || {};
   const { user, token } = useAuth();
+
+  // Early return if bookingId is missing
+  if (!bookingId) {
+    console.error('ChatScreen: bookingId is required');
+    return null;
+  }
   const insets = useSafeAreaInsets();
   const flatListRef = useRef();
 
@@ -35,7 +41,7 @@ const ChatScreen = ({ navigation, route }) => {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
 
-  const { messages, setMessages, isProTyping, send, typing, isConnected } =
+  const { messages, setMessages, isUserTyping, send, typing, isConnected } =
     useBookingSocket(bookingId);
 
   useEffect(() => {
@@ -70,8 +76,10 @@ const ChatScreen = ({ navigation, route }) => {
 
     try {
       if (isConnected) {
-        send(messageText, 'text');
+        // Use await to properly handle the Promise and catch errors
+        await send(messageText, 'text');
       } else {
+        // Fallback to API when socket not connected
         await apiService.post(API_ENDPOINTS.BOOKING_MESSAGES(bookingId), {
           content: messageText,
           messageType: 'text',
@@ -80,7 +88,9 @@ const ChatScreen = ({ navigation, route }) => {
       }
     } catch (error) {
       console.error('Error sending message:', error);
+      // Restore message on failure so user can retry
       setMessage(messageText);
+      // Could add a toast/alert here to notify user of failure
     } finally {
       setSending(false);
     }
@@ -378,7 +388,7 @@ const ChatScreen = ({ navigation, route }) => {
         />
 
         {/* Typing Indicator */}
-        {isProTyping && (
+        {isUserTyping && (
           <View className="px-4 pb-2">
             <Text
               className="text-sm text-gray-500"

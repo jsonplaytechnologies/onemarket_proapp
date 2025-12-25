@@ -18,7 +18,13 @@ import { Ionicons } from '@expo/vector-icons';
 import apiService, { ApiError } from '../../services/api';
 import { API_ENDPOINTS } from '../../constants/api';
 import { COLORS } from '../../constants/colors';
-import { StatusBadge } from '../../components/bookings';
+import {
+  StatusBadge,
+  TimeoutCountdown,
+  BookNowBadge,
+  CustomerAnswersCard,
+  QuoteFormModal
+} from '../../components/bookings';
 import Button from '../../components/common/Button';
 import { useBookingSocket } from '../../hooks/useSocket';
 
@@ -28,9 +34,9 @@ const BookingDetailsScreen = ({ navigation, route }) => {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [showQuotationModal, setShowQuotationModal] = useState(false);
-  const [quotationAmount, setQuotationAmount] = useState('');
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
+  const [answers, setAnswers] = useState([]);
 
   const { bookingStatus } = useBookingSocket(bookingId);
 
@@ -49,6 +55,10 @@ const BookingDetailsScreen = ({ navigation, route }) => {
       const response = await apiService.get(API_ENDPOINTS.BOOKING_DETAILS(bookingId));
       if (response.success) {
         setBooking(response.data);
+        // Fetch answers for Phase 2 bookings
+        if (['waiting_approval', 'waiting_quote', 'waiting_acceptance'].includes(response.data?.status)) {
+          fetchBookingAnswers();
+        }
       }
     } catch (error) {
       console.error('Error fetching booking:', error);
@@ -58,11 +68,23 @@ const BookingDetailsScreen = ({ navigation, route }) => {
     }
   };
 
-  const handleAccept = async () => {
+  const fetchBookingAnswers = async () => {
+    try {
+      const response = await apiService.get(API_ENDPOINTS.BOOKING_ANSWERS(bookingId));
+      if (response.success && response.data) {
+        setAnswers(response.data.answers || []);
+      }
+    } catch (error) {
+      console.error('Error fetching answers:', error);
+    }
+  };
+
+  // Phase 2: Accept Assignment
+  const handleAcceptAssignment = async () => {
     setActionLoading(true);
     try {
-      await apiService.patch(API_ENDPOINTS.BOOKING_ACCEPT(bookingId));
-      Alert.alert('Success', 'Booking accepted. You can now send a quotation.');
+      await apiService.patch(API_ENDPOINTS.BOOKING_ACCEPT_ASSIGNMENT(bookingId));
+      Alert.alert('Success', 'Assignment accepted! Discuss scope with customer before sending quote.');
       fetchBookingDetails();
     } catch (error) {
       if (error.code === 'RATE_LIMITED') {
@@ -74,14 +96,15 @@ const BookingDetailsScreen = ({ navigation, route }) => {
         const errorMsg = error.errors?.map(e => e.msg).join('\n') || error.message;
         Alert.alert('Validation Error', errorMsg);
       } else {
-        Alert.alert('Error', error.message || 'Failed to accept booking');
+        Alert.alert('Error', error.message || 'Failed to accept assignment');
       }
     } finally {
       setActionLoading(false);
     }
   };
 
-  const handleReject = async () => {
+  // Phase 2: Reject Assignment
+  const handleRejectAssignment = async () => {
     if (!rejectReason) {
       Alert.alert('Error', 'Please provide a reason for rejection');
       return;
@@ -89,11 +112,11 @@ const BookingDetailsScreen = ({ navigation, route }) => {
 
     setActionLoading(true);
     try {
-      await apiService.patch(API_ENDPOINTS.BOOKING_REJECT(bookingId), {
+      await apiService.patch(API_ENDPOINTS.BOOKING_REJECT_ASSIGNMENT(bookingId), {
         reason: rejectReason,
       });
       setShowRejectModal(false);
-      Alert.alert('Booking Rejected', 'The booking has been rejected.');
+      Alert.alert('Assignment Rejected', 'The booking has been rejected and reassigned.');
       navigation.goBack();
     } catch (error) {
       if (error.code === 'RATE_LIMITED') {
@@ -105,26 +128,23 @@ const BookingDetailsScreen = ({ navigation, route }) => {
         const errorMsg = error.errors?.map(e => e.msg).join('\n') || error.message;
         Alert.alert('Validation Error', errorMsg);
       } else {
-        Alert.alert('Error', error.message || 'Failed to reject booking');
+        Alert.alert('Error', error.message || 'Failed to reject assignment');
       }
     } finally {
       setActionLoading(false);
     }
   };
 
-  const handleSendQuotation = async () => {
-    if (!quotationAmount || parseInt(quotationAmount) <= 0) {
-      Alert.alert('Error', 'Please enter a valid amount');
-      return;
-    }
-
+  // Phase 2: Send Quote with Duration
+  const handleSendQuote = async (amount, durationMinutes) => {
     setActionLoading(true);
     try {
-      await apiService.patch(API_ENDPOINTS.BOOKING_QUOTATION(bookingId), {
-        amount: parseInt(quotationAmount),
+      await apiService.patch(API_ENDPOINTS.BOOKING_QUOTE(bookingId), {
+        amount,
+        durationMinutes,
       });
       setShowQuotationModal(false);
-      Alert.alert('Success', 'Quotation sent to customer');
+      Alert.alert('Success', 'Quote sent to customer');
       fetchBookingDetails();
     } catch (error) {
       if (error.code === 'RATE_LIMITED') {
@@ -136,7 +156,7 @@ const BookingDetailsScreen = ({ navigation, route }) => {
         const errorMsg = error.errors?.map(e => e.msg).join('\n') || error.message;
         Alert.alert('Validation Error', errorMsg);
       } else {
-        Alert.alert('Error', error.message || 'Failed to send quotation');
+        Alert.alert('Error', error.message || 'Failed to send quote');
       }
     } finally {
       setActionLoading(false);
@@ -246,34 +266,123 @@ const BookingDetailsScreen = ({ navigation, route }) => {
     const status = booking?.status;
 
     switch (status) {
-      case 'pending':
+      // Phase 2: New Assignment - waiting_approval
+      case 'waiting_approval':
         return (
-          <View className="flex-row space-x-3">
-            <View className="flex-1 mr-2">
-              <Button
-                title="Accept"
-                onPress={handleAccept}
-                loading={actionLoading}
-                variant="success"
-              />
-            </View>
-            <View className="flex-1">
-              <Button
-                title="Reject"
-                onPress={() => setShowRejectModal(true)}
-                variant="danger"
-              />
+          <View>
+            {/* Show customer's answers if available */}
+            {answers.length > 0 && <CustomerAnswersCard answers={answers} />}
+
+            <View className="flex-row space-x-3">
+              <View className="flex-1 mr-2">
+                <Button
+                  title="Accept"
+                  onPress={handleAcceptAssignment}
+                  loading={actionLoading}
+                  variant="success"
+                  icon={<Ionicons name="checkmark-circle-outline" size={20} color="#FFFFFF" />}
+                />
+              </View>
+              <View className="flex-1">
+                <Button
+                  title="Reject"
+                  onPress={() => setShowRejectModal(true)}
+                  variant="danger"
+                  icon={<Ionicons name="close-circle-outline" size={20} color="#FFFFFF" />}
+                />
+              </View>
             </View>
           </View>
         );
 
-      case 'accepted':
+      // Phase 2: Send Quote - waiting_quote
+      case 'waiting_quote':
         return (
-          <Button
-            title="Send Quotation"
-            onPress={() => setShowQuotationModal(true)}
-            icon={<Ionicons name="document-text-outline" size={20} color="#FFFFFF" />}
-          />
+          <View>
+            {/* Show customer's answers */}
+            {answers.length > 0 && <CustomerAnswersCard answers={answers} />}
+
+            {/* Chat Guidance */}
+            <View className="bg-blue-50 p-4 rounded-xl mb-4">
+              <View className="flex-row items-start">
+                <Ionicons name="information-circle" size={22} color="#1D4ED8" />
+                <Text
+                  className="text-blue-800 ml-3 flex-1"
+                  style={{ fontFamily: 'Poppins-Regular', fontSize: 13 }}
+                >
+                  Discuss the job scope and price with the customer in chat before sending your quote.
+                  You can only send one quote - make it count!
+                </Text>
+              </View>
+            </View>
+
+            {/* Action Buttons */}
+            <View className="flex-row space-x-3">
+              <View className="flex-1 mr-2">
+                <Button
+                  title="Chat"
+                  onPress={() => navigation.navigate('Chat', { bookingId, booking })}
+                  variant="secondary"
+                  icon={<Ionicons name="chatbubble-outline" size={20} color={COLORS.primary} />}
+                />
+              </View>
+              <View className="flex-1">
+                <Button
+                  title="Send Quote"
+                  onPress={() => setShowQuotationModal(true)}
+                  icon={<Ionicons name="document-text-outline" size={20} color="#FFFFFF" />}
+                />
+              </View>
+            </View>
+          </View>
+        );
+
+      // Phase 2: Waiting for customer to accept quote - waiting_acceptance
+      case 'waiting_acceptance':
+        return (
+          <View className="bg-indigo-50 p-5 rounded-xl">
+            <View className="flex-row items-center mb-3">
+              <Ionicons name="time-outline" size={24} color="#4F46E5" />
+              <Text
+                className="text-indigo-800 ml-2"
+                style={{ fontFamily: 'Poppins-SemiBold', fontSize: 15 }}
+              >
+                Waiting for Customer
+              </Text>
+            </View>
+
+            <View className="border-t border-indigo-200 pt-3 mt-2">
+              <Text
+                className="text-indigo-700 mb-1"
+                style={{ fontFamily: 'Poppins-Regular', fontSize: 13 }}
+              >
+                Your Quote
+              </Text>
+              <View className="flex-row items-baseline">
+                <Text
+                  className="text-indigo-900"
+                  style={{ fontFamily: 'Poppins-Bold', fontSize: 28 }}
+                >
+                  {formatCurrency(booking.quotation_amount)}
+                </Text>
+                {booking.quoted_duration_minutes && (
+                  <Text
+                    className="text-indigo-600 ml-3"
+                    style={{ fontFamily: 'Poppins-Regular', fontSize: 14 }}
+                  >
+                    ({Math.floor(booking.quoted_duration_minutes / 60)}h {booking.quoted_duration_minutes % 60}m)
+                  </Text>
+                )}
+              </View>
+            </View>
+
+            <Text
+              className="text-indigo-600 text-center mt-4"
+              style={{ fontFamily: 'Poppins-Regular', fontSize: 13 }}
+            >
+              Customer has been notified of your quote
+            </Text>
+          </View>
         );
 
       case 'paid':
@@ -432,11 +541,7 @@ const BookingDetailsScreen = ({ navigation, route }) => {
               >
                 {userName}
               </Text>
-              {booking.status === 'paid' ||
-              booking.status === 'on_the_way' ||
-              booking.status === 'job_started' ||
-              booking.status === 'job_complete_requested' ||
-              booking.status === 'completed' ? (
+              {['paid', 'on_the_way', 'job_start_requested', 'job_started', 'job_complete_requested', 'completed'].includes(booking.status) ? (
                 <Text
                   className="text-sm text-gray-500"
                   style={{ fontFamily: 'Poppins-Regular' }}
@@ -445,7 +550,7 @@ const BookingDetailsScreen = ({ navigation, route }) => {
                 </Text>
               ) : null}
             </View>
-            {booking.user_phone && ['paid', 'on_the_way', 'job_started'].includes(booking.status) && (
+            {booking.user_phone && ['paid', 'on_the_way', 'job_start_requested', 'job_started', 'job_complete_requested'].includes(booking.status) && (
               <TouchableOpacity
                 className="bg-green-100 p-2 rounded-lg"
                 onPress={handleCallCustomer}
@@ -455,6 +560,56 @@ const BookingDetailsScreen = ({ navigation, route }) => {
             )}
           </View>
         </View>
+
+        {/* Book Now Badge */}
+        {booking.is_book_now && (
+          <View className="mx-4 mt-4">
+            <BookNowBadge />
+          </View>
+        )}
+
+        {/* Booking Path Badge */}
+        {booking.booking_path && (
+          <View className="mx-4 mt-4">
+            <View
+              className={`px-4 py-2 rounded-xl flex-row items-center ${
+                booking.booking_path === 'auto' ? 'bg-purple-50' : 'bg-blue-50'
+              }`}
+            >
+              <Ionicons
+                name={booking.booking_path === 'auto' ? 'flash' : 'person'}
+                size={18}
+                color={booking.booking_path === 'auto' ? '#7C3AED' : '#1D4ED8'}
+              />
+              <Text
+                style={{
+                  fontFamily: 'Poppins-Medium',
+                  fontSize: 13,
+                  color: booking.booking_path === 'auto' ? '#7C3AED' : '#1D4ED8',
+                  marginLeft: 8,
+                }}
+              >
+                {booking.booking_path === 'auto' ? 'Auto-Selected' : 'Manually Selected'}
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {/* Timeout Countdown for Limbo States */}
+        {booking.limbo_timeout_at && ['waiting_approval', 'waiting_quote', 'waiting_acceptance'].includes(booking.status) && (
+          <View className="mx-4 mt-4">
+            <TimeoutCountdown
+              timeoutAt={booking.limbo_timeout_at}
+              label={
+                booking.status === 'waiting_approval'
+                  ? 'Time to Accept/Reject'
+                  : booking.status === 'waiting_quote'
+                  ? 'Time to Submit Quote'
+                  : 'Customer Response Time'
+              }
+            />
+          </View>
+        )}
 
         {/* Service Info */}
         <View className="bg-white mx-4 mt-4 rounded-xl p-4 border border-gray-200">
@@ -478,23 +633,71 @@ const BookingDetailsScreen = ({ navigation, route }) => {
               {booking.category_name}
             </Text>
           )}
-          {booking.user_note && (
-            <View className="mt-3 p-3 bg-gray-50 rounded-lg">
-              <Text
-                className="text-sm text-gray-500"
-                style={{ fontFamily: 'Poppins-Medium' }}
-              >
-                Customer Note:
-              </Text>
-              <Text
-                className="text-sm text-gray-700 mt-1"
-                style={{ fontFamily: 'Poppins-Regular' }}
-              >
-                {booking.user_note}
-              </Text>
-            </View>
-          )}
         </View>
+
+        {/* Service Questions & Answers */}
+        {booking.answers && booking.answers.length > 0 && (
+          <View className="bg-white mx-4 mt-4 rounded-xl p-4 border border-gray-200">
+            <Text
+              className="text-sm text-gray-500 mb-3"
+              style={{ fontFamily: 'Poppins-Medium' }}
+            >
+              SERVICE DETAILS
+            </Text>
+            {booking.answers.map((answer, index) => (
+              <View key={index} className={index > 0 ? 'mt-3 pt-3 border-t border-gray-100' : ''}>
+                <Text
+                  className="text-gray-600 mb-1"
+                  style={{ fontFamily: 'Poppins-Medium', fontSize: 13 }}
+                >
+                  {answer.question_text}
+                </Text>
+                <Text
+                  className="text-gray-900"
+                  style={{ fontFamily: 'Poppins-Regular', fontSize: 14 }}
+                >
+                  {answer.answer_text}
+                </Text>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* User Description */}
+        {booking.user_description && (
+          <View className="bg-white mx-4 mt-4 rounded-xl p-4 border border-gray-200">
+            <Text
+              className="text-sm text-gray-500 mb-2"
+              style={{ fontFamily: 'Poppins-Medium' }}
+            >
+              CUSTOMER DESCRIPTION
+            </Text>
+            <Text
+              className="text-gray-900"
+              style={{ fontFamily: 'Poppins-Regular', fontSize: 14 }}
+            >
+              {booking.user_description}
+            </Text>
+          </View>
+        )}
+
+        {/* Legacy user_note field (kept for backward compatibility) */}
+        {booking.user_note && (
+          <View className="bg-white mx-4 mt-4 rounded-xl p-4 border border-gray-200">
+            <Text
+              className="text-sm text-gray-500 mb-2"
+              style={{ fontFamily: 'Poppins-Medium' }}
+            >
+              CUSTOMER NOTE
+            </Text>
+            <Text
+              className="text-gray-900"
+              style={{ fontFamily: 'Poppins-Regular', fontSize: 14 }}
+            >
+              {booking.user_note}
+            </Text>
+          </View>
+        )}
 
         {/* Location */}
         {booking.zone_name && (
@@ -506,7 +709,7 @@ const BookingDetailsScreen = ({ navigation, route }) => {
               >
                 LOCATION
               </Text>
-              {booking.user_lat && ['paid', 'on_the_way', 'job_started'].includes(booking.status) && (
+              {booking.user_lat && ['paid', 'on_the_way', 'job_start_requested', 'job_started', 'job_complete_requested'].includes(booking.status) && (
                 <TouchableOpacity
                   className="flex-row items-center"
                   onPress={handleOpenMaps}
@@ -638,7 +841,7 @@ const BookingDetailsScreen = ({ navigation, route }) => {
         <View className="mx-4 mt-6 mb-8">{renderActionButtons()}</View>
 
         {/* Chat Button */}
-        {['accepted', 'quotation_sent', 'paid', 'on_the_way', 'job_started'].includes(booking.status) && (
+        {['waiting_acceptance', 'paid', 'on_the_way', 'job_start_requested', 'job_started', 'job_complete_requested'].includes(booking.status) && (
           <View className="mx-4 mb-8">
             <Button
               title="Chat with Customer"
@@ -650,63 +853,14 @@ const BookingDetailsScreen = ({ navigation, route }) => {
         )}
       </ScrollView>
 
-      {/* Quotation Modal */}
-      <Modal
+      {/* Phase 2: Quote Form Modal */}
+      <QuoteFormModal
         visible={showQuotationModal}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setShowQuotationModal(false)}
-      >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          className="flex-1 justify-end bg-black/50"
-        >
-          <View className="bg-white rounded-t-3xl px-6 pt-6 pb-8">
-            <View className="flex-row items-center justify-between mb-6">
-              <Text
-                className="text-xl font-bold text-gray-900"
-                style={{ fontFamily: 'Poppins-Bold' }}
-              >
-                Send Quotation
-              </Text>
-              <TouchableOpacity onPress={() => setShowQuotationModal(false)}>
-                <Ionicons name="close" size={24} color={COLORS.textSecondary} />
-              </TouchableOpacity>
-            </View>
-
-            <Text
-              className="text-gray-600 mb-4"
-              style={{ fontFamily: 'Poppins-Regular' }}
-            >
-              Enter the total amount for this job:
-            </Text>
-
-            <View className="flex-row items-center border border-gray-300 rounded-xl px-4 py-3 mb-6">
-              <TextInput
-                className="flex-1 text-2xl font-semibold text-gray-900"
-                style={{ fontFamily: 'Poppins-SemiBold' }}
-                placeholder="0"
-                value={quotationAmount}
-                onChangeText={setQuotationAmount}
-                keyboardType="number-pad"
-              />
-              <Text
-                className="text-base text-gray-500 ml-2"
-                style={{ fontFamily: 'Poppins-Regular' }}
-              >
-                XAF
-              </Text>
-            </View>
-
-            <Button
-              title="Send Quotation"
-              onPress={handleSendQuotation}
-              disabled={!quotationAmount}
-              loading={actionLoading}
-            />
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
+        onClose={() => setShowQuotationModal(false)}
+        onSubmit={handleSendQuote}
+        serviceName={booking?.service_name}
+        loading={actionLoading}
+      />
 
       {/* Reject Modal */}
       <Modal
@@ -749,8 +903,8 @@ const BookingDetailsScreen = ({ navigation, route }) => {
             />
 
             <Button
-              title="Reject Booking"
-              onPress={handleReject}
+              title="Reject Assignment"
+              onPress={handleRejectAssignment}
               disabled={!rejectReason}
               loading={actionLoading}
               variant="danger"

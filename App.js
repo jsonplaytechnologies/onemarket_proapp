@@ -13,6 +13,7 @@ import {
 import { AuthProvider } from './src/context/AuthContext';
 import { SocketProvider } from './src/context/SocketContext';
 import { NotificationProvider } from './src/context/NotificationContext';
+import { BookingProvider } from './src/context/BookingContext';
 import AppNavigator from './src/navigation/AppNavigator';
 
 // Keep the splash screen visible while we fetch resources
@@ -41,8 +42,10 @@ export default function App() {
       <AuthProvider>
         <SocketProvider>
           <NotificationProvider>
-            <AppNavigator />
-            <StatusBar style="auto" />
+            <BookingProvider>
+              <AppNavigator />
+              <StatusBar style="auto" />
+            </BookingProvider>
           </NotificationProvider>
         </SocketProvider>
       </AuthProvider>

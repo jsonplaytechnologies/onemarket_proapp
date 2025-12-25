@@ -41,6 +41,12 @@ const ProfileScreen = () => {
 
   const menuItems = [
     {
+      id: 'availability',
+      icon: 'time-outline',
+      label: 'Availability Schedule',
+      onPress: () => navigation.navigate('Availability'),
+    },
+    {
       id: 'services',
       icon: 'construct-outline',
       label: 'My Services',

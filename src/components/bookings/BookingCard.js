@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import StatusBadge from './StatusBadge';
+import BookNowBadge from './BookNowBadge';
 import { COLORS } from '../../constants/colors';
 
 const BookingCard = ({ booking, onPress }) => {
@@ -41,6 +42,13 @@ const BookingCard = ({ booking, onPress }) => {
       activeOpacity={0.7}
       onPress={onPress}
     >
+      {/* Book Now Badge at top if applicable */}
+      {booking.is_book_now && (
+        <View className="mb-3">
+          <BookNowBadge />
+        </View>
+      )}
+
       <View className="flex-row items-center">
         {/* Avatar */}
         {userAvatar ? (
@@ -72,6 +80,26 @@ const BookingCard = ({ booking, onPress }) => {
           >
             {serviceName}
           </Text>
+          {/* Show booking path badge */}
+          {booking.booking_path && (
+            <View className="flex-row items-center mt-1">
+              <View
+                className={`px-2 py-0.5 rounded ${
+                  booking.booking_path === 'auto' ? 'bg-purple-100' : 'bg-blue-100'
+                }`}
+              >
+                <Text
+                  style={{
+                    fontFamily: 'Poppins-Medium',
+                    fontSize: 10,
+                    color: booking.booking_path === 'auto' ? '#7C3AED' : '#1D4ED8',
+                  }}
+                >
+                  {booking.booking_path === 'auto' ? 'AUTO' : 'MANUAL'}
+                </Text>
+              </View>
+            </View>
+          )}
         </View>
       </View>
 

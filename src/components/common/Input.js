@@ -16,18 +16,19 @@ const Input = ({
   style,
   inputStyle,
 }) => {
-  const getBgColor = () => {
-    if (error) return 'bg-red-50';
-    if (!editable) return 'bg-gray-100';
-    return 'bg-gray-50';
+  const getContainerStyle = () => {
+    if (error) return 'bg-red-50 border border-red-300';
+    if (!editable) return 'bg-gray-100 border border-gray-200';
+    return 'bg-white border border-gray-300';
   };
 
   return (
     <View className="w-full" style={style}>
       <View
-        className={`flex-row items-center rounded-2xl px-4 ${
-          multiline ? 'py-3' : 'py-4'
-        } ${getBgColor()}`}
+        className={`flex-row items-center rounded-xl px-4 ${
+          multiline ? 'py-3' : 'py-3'
+        } ${getContainerStyle()}`}
+        style={{ minHeight: multiline ? 100 : 50 }}
       >
         {icon && (
           <View className="mr-3">
@@ -39,7 +40,7 @@ const Input = ({
           </View>
         )}
         <TextInput
-          className={`flex-1 ${!editable ? 'text-gray-400' : 'text-gray-900'}`}
+          className="flex-1"
           placeholder={placeholder}
           placeholderTextColor="#9CA3AF"
           value={value}
@@ -50,7 +51,11 @@ const Input = ({
           secureTextEntry={secureTextEntry}
           editable={editable}
           style={[
-            { fontFamily: 'Poppins-Regular', fontSize: 15 },
+            {
+              fontFamily: 'Poppins-Regular',
+              fontSize: 15,
+              color: !editable ? '#9CA3AF' : '#111827',
+            },
             multiline && { minHeight: 100, textAlignVertical: 'top' },
             inputStyle,
           ]}

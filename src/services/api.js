@@ -266,6 +266,15 @@ class ApiService {
     });
   }
 
+  // PUT request
+  async put(endpoint, data, options = {}) {
+    return this.request(endpoint, {
+      ...options,
+      method: 'PUT',
+      body: data instanceof FormData ? data : JSON.stringify(data),
+    });
+  }
+
   // PATCH request
   async patch(endpoint, data, options = {}) {
     return this.request(endpoint, {

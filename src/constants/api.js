@@ -1,4 +1,5 @@
-export const API_BASE_URL = 'https://onemarketbackend-production.up.railway.app';
+// export const API_BASE_URL = 'https://onemarketbackend-production.up.railway.app';
+export const API_BASE_URL = 'http://192.168.29.101:5000';
 
 export const API_ENDPOINTS = {
   // Auth
@@ -28,9 +29,10 @@ export const API_ENDPOINTS = {
   // Bookings
   BOOKINGS: '/api/bookings',
   BOOKING_DETAILS: (id) => `/api/bookings/${id}`,
-  BOOKING_ACCEPT: (id) => `/api/bookings/${id}/accept`,
-  BOOKING_REJECT: (id) => `/api/bookings/${id}/reject`,
-  BOOKING_QUOTATION: (id) => `/api/bookings/${id}/quotation`,
+  BOOKING_ACCEPT_ASSIGNMENT: (id) => `/api/bookings/${id}/accept-assignment`,
+  BOOKING_REJECT_ASSIGNMENT: (id) => `/api/bookings/${id}/reject-assignment`,
+  BOOKING_QUOTE: (id) => `/api/bookings/${id}/quote`,
+  BOOKING_ANSWERS: (id) => `/api/bookings/${id}/answers`,
   BOOKING_ON_THE_WAY: (id) => `/api/bookings/${id}/on-the-way`,
   BOOKING_START: (id) => `/api/bookings/${id}/start`,
   BOOKING_COMPLETE: (id) => `/api/bookings/${id}/complete`,
@@ -38,6 +40,7 @@ export const API_ENDPOINTS = {
   BOOKING_MESSAGES: (id) => `/api/bookings/${id}/messages`,
   BOOKING_MESSAGES_IMAGE: (id) => `/api/bookings/${id}/messages/image`,
   BOOKING_MESSAGES_READ: (id) => `/api/bookings/${id}/messages/read`,
+  BOOKING_HISTORY: (id) => `/api/bookings/${id}/history`,
 
   // Earnings & Wallet
   EARNINGS: '/api/pros/me/earnings',
@@ -60,4 +63,17 @@ export const API_ENDPOINTS = {
   NOTIFICATIONS_UNREAD_COUNT: '/api/notifications/unread-count',
   NOTIFICATION_READ: (id) => `/api/notifications/${id}/read`,
   NOTIFICATIONS_READ_ALL: '/api/notifications/read-all',
+
+  // Phase 2 - Scope Confirmation
+  BOOKING_CONFIRM_SCOPE: (id) => `/api/bookings/${id}/confirm-scope`,
+  BOOKING_DURATION_OPTIONS: '/api/bookings/duration-options',
+
+  // Phase 2 - Provider Availability Management
+  MY_AVAILABILITY: '/api/pros/me/availability',
+  PRO_AVAILABILITY_GET: '/api/pros/me/availability',
+  PRO_AVAILABILITY_SET: '/api/pros/me/availability',
+  AVAILABILITY_SLOT: (id) => `/api/pros/me/availability/${id}`,
+
+  // Phase 2 - Provider Ranking & Stats
+  MY_RANKING: '/api/pros/me/ranking',
 };

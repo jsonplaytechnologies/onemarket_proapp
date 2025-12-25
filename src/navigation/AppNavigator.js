@@ -45,6 +45,7 @@ import MyZonesScreen from '../screens/zones/MyZonesScreen';
 
 // Profile Screens
 import EditProfileScreen from '../screens/profile/EditProfileScreen';
+import AvailabilityScreen from '../screens/profile/AvailabilityScreen';
 import ReviewsScreen from '../screens/reviews/ReviewsScreen';
 
 const Stack = createNativeStackNavigator();
@@ -156,6 +157,7 @@ const MainStack = () => {
       <Stack.Screen name="MyServices" component={MyServicesScreen} />
       <Stack.Screen name="MyZones" component={MyZonesScreen} />
       <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+      <Stack.Screen name="Availability" component={AvailabilityScreen} />
       <Stack.Screen name="Reviews" component={ReviewsScreen} />
     </Stack.Navigator>
   );
