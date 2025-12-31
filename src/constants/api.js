@@ -1,5 +1,5 @@
 // export const API_BASE_URL = 'https://onemarketbackend-production.up.railway.app';
-export const API_BASE_URL = 'http://192.168.29.101:5000';
+export const API_BASE_URL = 'http://192.168.29.45:5000';
 
 export const API_ENDPOINTS = {
   // Auth
@@ -10,6 +10,7 @@ export const API_ENDPOINTS = {
 
   // Pro Profile
   PRO_PROFILE: '/api/pros/me/profile',
+  PRO_ONLINE_TOGGLE: '/api/pros/me/online',
   PRO_AVAILABILITY: '/api/pros/me/availability',
   PRO_DOCUMENTS: '/api/pros/me/documents',
   PRO_SUBMIT: '/api/pros/me/submit',
@@ -61,11 +62,11 @@ export const API_ENDPOINTS = {
   // Notifications
   NOTIFICATIONS: '/api/notifications',
   NOTIFICATIONS_UNREAD_COUNT: '/api/notifications/unread-count',
+  NOTIFICATIONS_STATUS: '/api/notifications/status', // Combined endpoint for all unread counts
   NOTIFICATION_READ: (id) => `/api/notifications/${id}/read`,
   NOTIFICATIONS_READ_ALL: '/api/notifications/read-all',
 
-  // Phase 2 - Scope Confirmation
-  BOOKING_CONFIRM_SCOPE: (id) => `/api/bookings/${id}/confirm-scope`,
+  // Phase 2 - Duration Options
   BOOKING_DURATION_OPTIONS: '/api/bookings/duration-options',
 
   // Phase 2 - Provider Availability Management

@@ -10,6 +10,9 @@ import { API_BASE_URL } from '../constants/api';
 
 const SocketContext = createContext(null);
 
+// Terminal booking statuses that should not be rejoined on reconnection
+const TERMINAL_STATUSES = ['rejected', 'cancelled', 'failed', 'expired', 'quote_expired', 'quote_rejected'];
+
 export const SocketProvider = ({ children }) => {
   const { token, isAuthenticated, user } = useAuth();
   const [isConnected, setIsConnected] = useState(false);
@@ -62,9 +65,14 @@ export const SocketProvider = ({ children }) => {
               if (response?.success) {
                 console.log(`Successfully rejoined booking room: ${bookingId}`);
               } else {
-                console.error(`Failed to rejoin booking room: ${bookingId}`, response?.code);
-                // Remove from tracking if join failed (e.g., booking no longer accessible)
+                // Remove from tracking if join failed
                 activeBookingsRef.current.delete(bookingId);
+                // Only log as error if it's not an expected terminal state
+                if (response?.code === 'BOOKING_INACTIVE') {
+                  console.log(`Booking ${bookingId} is now in terminal state - removed from active rooms`);
+                } else {
+                  console.error(`Failed to rejoin booking room: ${bookingId}`, response?.code);
+                }
               }
             });
           });
@@ -82,8 +90,22 @@ export const SocketProvider = ({ children }) => {
         });
 
         socketRef.current.on('error', (error) => {
+          // Don't log BOOKING_INACTIVE as error - it's expected for terminal bookings
+          if (error?.code === 'BOOKING_INACTIVE') {
+            console.log('Socket info: Booking is in terminal state, socket room not available');
+            return;
+          }
           console.error('Socket error:', error);
-          setConnectionError(error.message);
+          setConnectionError(error.message || error.code);
+        });
+
+        // Global listener to clean up terminal status bookings from activeBookingsRef
+        // This prevents reconnect logic from trying to rejoin rooms for rejected/cancelled bookings
+        socketRef.current.on('booking-status-changed', (data) => {
+          if (data.bookingId && TERMINAL_STATUSES.includes(data.status)) {
+            console.log(`Removing terminal booking ${data.bookingId} (${data.status}) from active rooms`);
+            activeBookingsRef.current.delete(data.bookingId);
+          }
         });
       }
     }
@@ -172,14 +194,29 @@ export const SocketProvider = ({ children }) => {
   }, [isConnected]);
 
   // Join a booking room - tracks for reconnection
-  const joinBooking = useCallback((bookingId) => {
+  const joinBooking = useCallback((bookingId, onStatusUpdate) => {
     if (socketRef.current && isConnected) {
       socketRef.current.emit('join-booking', bookingId, (response) => {
         if (response?.success) {
           activeBookingsRef.current.add(bookingId);
-          console.log('Joined booking room:', bookingId);
+          console.log('Joined booking room:', bookingId, 'status:', response.status);
+          // If callback provided, notify of current status
+          if (onStatusUpdate && response.status) {
+            onStatusUpdate({ bookingId, status: response.status });
+          }
         } else {
-          console.error('Failed to join booking room:', bookingId, response?.code);
+          // If booking is in terminal state, this is expected - don't log as error
+          if (response?.code === 'BOOKING_INACTIVE') {
+            activeBookingsRef.current.delete(bookingId);
+            console.log(`Booking ${bookingId} is in terminal state: ${response.status || 'unknown'} - socket room not needed`);
+            // Notify callback so UI can update to show correct status
+            if (onStatusUpdate && response.status) {
+              onStatusUpdate({ bookingId, status: response.status });
+            }
+          } else {
+            // Only log actual errors (not expected terminal states)
+            console.error('Failed to join booking room:', bookingId, response?.code);
+          }
         }
       });
     }

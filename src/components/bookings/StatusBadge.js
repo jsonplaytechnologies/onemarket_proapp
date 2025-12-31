@@ -82,6 +82,11 @@ const STATUS_CONFIG = {
     bg: 'bg-red-50',
     text: '#DC2626',
   },
+  expired: {
+    label: 'Timed Out',
+    bg: 'bg-orange-50',
+    text: '#EA580C',
+  },
 };
 
 const StatusBadge = ({ status, size = 'medium' }) => {

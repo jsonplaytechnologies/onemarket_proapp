@@ -247,10 +247,30 @@ export const BookingProvider = ({ children }) => {
     setBookings((prev) => prev.filter((b) => b.id !== data.bookingId));
   }, []);
 
+  // Terminal statuses that should remove the booking from provider's active list
+  const TERMINAL_STATUSES = ['expired', 'reassigned', 'failed', 'cancelled', 'rejected', 'quote_expired', 'quote_rejected'];
+
   const handleStatusChanged = useCallback((data) => {
     console.log('[BookingContext] Booking status changed:', data);
-    updateBooking(data.bookingId, { status: data.status });
+    // If status is terminal, remove the booking from the list
+    if (TERMINAL_STATUSES.includes(data.status)) {
+      setBookings((prev) => prev.filter((b) => b.id !== data.bookingId));
+    } else {
+      updateBooking(data.bookingId, { status: data.status });
+    }
   }, [updateBooking]);
+
+  // Handle assignment timeout - remove booking from list immediately
+  const handleAssignmentTimeout = useCallback((data) => {
+    console.log('[BookingContext] Assignment timeout:', data);
+    setBookings((prev) => prev.filter((b) => b.id !== data.bookingId));
+  }, []);
+
+  // Handle quote timeout (when provider didn't send quote in time)
+  const handleQuoteTimeout = useCallback((data) => {
+    console.log('[BookingContext] Quote timeout:', data);
+    setBookings((prev) => prev.filter((b) => b.id !== data.bookingId));
+  }, []);
 
   const handleJobConflictWarning = useCallback((data) => {
     console.log('[BookingContext] Job conflict warning:', data);
@@ -286,7 +306,9 @@ export const BookingProvider = ({ children }) => {
     // Register socket event listeners with specific callbacks
     on('new-assignment', handleNewAssignment);
     on('assignment-timeout-warning', handleAssignmentTimeoutWarning);
+    on('assignment-timeout', handleAssignmentTimeout);
     on('quote-timeout-warning', handleQuoteTimeoutWarning);
+    on('quote-timeout', handleQuoteTimeout);
     on('quote-accepted', handleQuoteAccepted);
     on('quote-declined', handleQuoteDeclined);
     on('booking-status-changed', handleStatusChanged);
@@ -300,7 +322,9 @@ export const BookingProvider = ({ children }) => {
     return () => {
       off('new-assignment', handleNewAssignment);
       off('assignment-timeout-warning', handleAssignmentTimeoutWarning);
+      off('assignment-timeout', handleAssignmentTimeout);
       off('quote-timeout-warning', handleQuoteTimeoutWarning);
+      off('quote-timeout', handleQuoteTimeout);
       off('quote-accepted', handleQuoteAccepted);
       off('quote-declined', handleQuoteDeclined);
       off('booking-status-changed', handleStatusChanged);
@@ -316,7 +340,9 @@ export const BookingProvider = ({ children }) => {
     off,
     handleNewAssignment,
     handleAssignmentTimeoutWarning,
+    handleAssignmentTimeout,
     handleQuoteTimeoutWarning,
+    handleQuoteTimeout,
     handleQuoteAccepted,
     handleQuoteDeclined,
     handleStatusChanged,

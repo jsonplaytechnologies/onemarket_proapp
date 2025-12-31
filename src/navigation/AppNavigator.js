@@ -48,6 +48,9 @@ import EditProfileScreen from '../screens/profile/EditProfileScreen';
 import AvailabilityScreen from '../screens/profile/AvailabilityScreen';
 import ReviewsScreen from '../screens/reviews/ReviewsScreen';
 
+// Schedule Screen
+import MyScheduleScreen from '../screens/schedule/MyScheduleScreen';
+
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
@@ -71,6 +74,7 @@ const OnboardingStack = () => {
       <Stack.Screen name="UploadDocuments" component={UploadDocumentsScreen} />
       <Stack.Screen name="AddServices" component={AddServicesScreen} />
       <Stack.Screen name="AddZones" component={AddZonesScreen} />
+      <Stack.Screen name="Availability" component={AvailabilityScreen} />
       <Stack.Screen name="PendingApproval" component={PendingApprovalScreen} />
       <Stack.Screen name="AccountRejected" component={AccountRejectedScreen} />
     </Stack.Navigator>
@@ -112,14 +116,6 @@ const MainTabs = () => {
                 <NotificationBadge count={unreadChatsCount} />
               </View>
             );
-          } else if (route.name === 'Notifications') {
-            iconName = focused ? 'notifications' : 'notifications-outline';
-            return (
-              <View>
-                <Ionicons name={iconName} size={size} color={color} />
-                <NotificationBadge count={unreadCount} />
-              </View>
-            );
           } else if (route.name === 'Profile') {
             iconName = focused ? 'person' : 'person-outline';
           }
@@ -138,7 +134,6 @@ const MainTabs = () => {
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Bookings" component={BookingsScreen} />
       <Tab.Screen name="Chats" component={ChatsScreen} />
-      <Tab.Screen name="Notifications" component={NotificationsScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
@@ -149,6 +144,7 @@ const MainStack = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="MainTabs" component={MainTabs} />
+      <Stack.Screen name="Notifications" component={NotificationsScreen} />
       <Stack.Screen name="BookingDetails" component={BookingDetailsScreen} />
       <Stack.Screen name="Chat" component={ChatScreen} />
       <Stack.Screen name="Earnings" component={EarningsScreen} />
@@ -159,6 +155,7 @@ const MainStack = () => {
       <Stack.Screen name="EditProfile" component={EditProfileScreen} />
       <Stack.Screen name="Availability" component={AvailabilityScreen} />
       <Stack.Screen name="Reviews" component={ReviewsScreen} />
+      <Stack.Screen name="MySchedule" component={MyScheduleScreen} />
     </Stack.Navigator>
   );
 };

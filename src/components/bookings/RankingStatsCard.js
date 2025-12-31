@@ -1,215 +1,351 @@
-import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS } from '../../constants/colors';
 
-const RankingStatsCard = ({ stats, onPress }) => {
+const RankingStatsCard = ({ stats }) => {
+  const [showInfo, setShowInfo] = useState(false);
+
   if (!stats) {
     return null;
   }
 
   const {
-    trust_score = 4.0,
-    job_confidence = 0.1,
-    best_provider_score = 0.4,
-    completed_bookings = 0,
-    average_rating = 0,
-    rank_percentile = 0,
+    trustScore = 4.0,
+    jobConfidence = 0.1,
+    bestProviderScore = 0.4,
+    completedBookings = 0,
+    totalReviews = 0,
   } = stats;
 
-  // Calculate stars display
-  const renderStars = (rating) => {
-    const stars = [];
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 >= 0.5;
-
-    for (let i = 0; i < 5; i++) {
-      if (i < fullStars) {
-        stars.push(
-          <Ionicons key={i} name="star" size={16} color="#F59E0B" />
-        );
-      } else if (i === fullStars && hasHalfStar) {
-        stars.push(
-          <Ionicons key={i} name="star-half" size={16} color="#F59E0B" />
-        );
-      } else {
-        stars.push(
-          <Ionicons key={i} name="star-outline" size={16} color="#D1D5DB" />
-        );
-      }
-    }
-    return stars;
-  };
-
-  // Calculate confidence percentage
-  const confidencePercent = Math.round(job_confidence * 100);
-
-  // Determine rank badge
-  const getRankBadge = () => {
-    if (rank_percentile >= 90) {
-      return { label: 'Top 10%', color: '#059669', bg: '#D1FAE5' };
-    } else if (rank_percentile >= 75) {
-      return { label: 'Top 25%', color: '#2563EB', bg: '#DBEAFE' };
-    } else if (rank_percentile >= 50) {
-      return { label: 'Top 50%', color: '#7C3AED', bg: '#EDE9FE' };
-    } else {
-      return { label: 'Building Rank', color: '#F59E0B', bg: '#FEF3C7' };
-    }
-  };
-
-  const rankBadge = getRankBadge();
+  const confidencePercent = Math.round(jobConfidence * 100);
+  const jobsNeeded = Math.max(0, 50 - completedBookings);
 
   return (
-    <TouchableOpacity
-      className="bg-white rounded-2xl p-5 border border-gray-200 mb-4"
-      onPress={onPress}
-      activeOpacity={0.7}
-      disabled={!onPress}
-    >
-      {/* Header */}
-      <View className="flex-row items-center justify-between mb-4">
-        <View className="flex-row items-center">
-          <View className="w-10 h-10 bg-purple-100 rounded-xl items-center justify-center mr-3">
-            <Ionicons name="trophy" size={22} color="#7C3AED" />
-          </View>
+    <>
+      <TouchableOpacity
+        className="rounded-2xl p-5 border border-purple-100"
+        onPress={() => setShowInfo(true)}
+        activeOpacity={0.7}
+        style={{ backgroundColor: '#F5F3FF' }}
+      >
+        {/* Header with Main Score */}
+        <View className="flex-row items-center justify-between mb-4">
           <View>
-            <Text
-              className="text-gray-900"
-              style={{ fontFamily: 'Poppins-SemiBold', fontSize: 16 }}
-            >
-              Your Performance
-            </Text>
-            <View
-              className="px-2 py-0.5 rounded mt-1"
-              style={{ backgroundColor: rankBadge.bg }}
-            >
+            <View className="flex-row items-center">
               <Text
-                style={{
-                  fontFamily: 'Poppins-SemiBold',
-                  fontSize: 10,
-                  color: rankBadge.color,
-                }}
+                className="text-gray-500"
+                style={{ fontFamily: 'Poppins-Medium', fontSize: 12 }}
               >
-                {rankBadge.label}
+                Your Provider Score
+              </Text>
+              <Ionicons name="information-circle-outline" size={16} color="#9CA3AF" style={{ marginLeft: 4 }} />
+            </View>
+            <View className="flex-row items-baseline">
+              <Text
+                className="text-purple-700"
+                style={{ fontFamily: 'Poppins-Bold', fontSize: 36 }}
+              >
+                {bestProviderScore.toFixed(1)}
+              </Text>
+              <Text
+                className="text-gray-400 ml-1"
+                style={{ fontFamily: 'Poppins-Regular', fontSize: 14 }}
+              >
+                / 5.0
               </Text>
             </View>
+          </View>
+          <View className="w-14 h-14 bg-purple-100 rounded-full items-center justify-center">
+            <Ionicons name="trophy" size={28} color="#7C3AED" />
           </View>
         </View>
-        {onPress && (
-          <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-        )}
-      </View>
 
-      {/* Stats Grid */}
-      <View className="space-y-3">
-        {/* Trust Score */}
-        <View className="flex-row items-center justify-between">
-          <View className="flex-1">
-            <Text
-              className="text-gray-500"
-              style={{ fontFamily: 'Poppins-Regular', fontSize: 12 }}
-            >
-              Trust Score
-            </Text>
-            <View className="flex-row items-center mt-1">
-              {renderStars(trust_score)}
+        {/* Two Stats Row */}
+        <View className="flex-row bg-white rounded-xl p-3 mb-3">
+          <View className="flex-1 items-center border-r border-gray-100">
+            <View className="flex-row items-center">
+              <Ionicons name="star" size={18} color="#F59E0B" />
               <Text
-                className="text-gray-900 ml-2"
-                style={{ fontFamily: 'Poppins-SemiBold', fontSize: 14 }}
+                className="text-gray-900 ml-1"
+                style={{ fontFamily: 'Poppins-Bold', fontSize: 18 }}
               >
-                {trust_score.toFixed(1)}
+                {trustScore.toFixed(1)}
               </Text>
             </View>
-          </View>
-          <View className="items-end">
             <Text
-              className="text-gray-900"
-              style={{ fontFamily: 'Poppins-Bold', fontSize: 20 }}
-            >
-              {trust_score.toFixed(1)}
-            </Text>
-            <Text
-              className="text-gray-400"
+              className="text-gray-400 mt-1"
               style={{ fontFamily: 'Poppins-Regular', fontSize: 11 }}
             >
-              /5.0
+              Rating ({totalReviews} reviews)
+            </Text>
+          </View>
+
+          <View className="flex-1 items-center">
+            <Text
+              className="text-gray-900"
+              style={{ fontFamily: 'Poppins-Bold', fontSize: 18 }}
+            >
+              {completedBookings}
+            </Text>
+            <Text
+              className="text-gray-400 mt-1"
+              style={{ fontFamily: 'Poppins-Regular', fontSize: 11 }}
+            >
+              Jobs Done
             </Text>
           </View>
         </View>
 
-        {/* Job Confidence */}
+        {/* Progress Bar */}
         <View>
           <View className="flex-row items-center justify-between mb-2">
             <Text
-              className="text-gray-500"
-              style={{ fontFamily: 'Poppins-Regular', fontSize: 12 }}
+              className="text-gray-600"
+              style={{ fontFamily: 'Poppins-Medium', fontSize: 12 }}
             >
-              Job Confidence
+              Experience Level
             </Text>
             <Text
-              className="text-gray-900"
-              style={{ fontFamily: 'Poppins-SemiBold', fontSize: 14 }}
+              className="text-purple-600"
+              style={{ fontFamily: 'Poppins-SemiBold', fontSize: 12 }}
             >
               {confidencePercent}%
             </Text>
           </View>
-          <View className="h-2 bg-gray-200 rounded-full overflow-hidden">
+          <View className="h-2 bg-purple-100 rounded-full overflow-hidden">
             <View
               className="h-full bg-purple-500 rounded-full"
               style={{ width: `${confidencePercent}%` }}
             />
           </View>
-          <Text
-            className="text-gray-400 mt-1"
-            style={{ fontFamily: 'Poppins-Regular', fontSize: 11 }}
-          >
-            {completed_bookings} of 50 jobs completed
-          </Text>
+          {jobsNeeded > 0 && (
+            <Text
+              className="text-gray-400 mt-2"
+              style={{ fontFamily: 'Poppins-Regular', fontSize: 11 }}
+            >
+              Complete {jobsNeeded} more jobs to reach max score potential
+            </Text>
+          )}
         </View>
+      </TouchableOpacity>
 
-        {/* Provider Score */}
-        <View className="flex-row items-center justify-between pt-3 border-t border-gray-100">
-          <View>
-            <Text
-              className="text-gray-500"
-              style={{ fontFamily: 'Poppins-Regular', fontSize: 12 }}
-            >
-              Provider Score
-            </Text>
-            <Text
-              className="text-gray-900 mt-1"
-              style={{ fontFamily: 'Poppins-Bold', fontSize: 18 }}
-            >
-              {best_provider_score.toFixed(2)}
-            </Text>
-          </View>
-          <View className="items-end">
-            <View className="flex-row items-center bg-green-50 px-3 py-1.5 rounded-lg">
-              <Ionicons name="trending-up" size={14} color="#059669" />
+      {/* Info Modal */}
+      <Modal
+        visible={showInfo}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowInfo(false)}
+      >
+        <View className="flex-1 justify-end bg-black/50">
+          <View className="bg-white rounded-t-3xl px-6 pt-6 pb-8 max-h-[85%]">
+            {/* Header */}
+            <View className="flex-row items-center justify-between mb-6">
               <Text
-                className="text-green-700 ml-1"
-                style={{ fontFamily: 'Poppins-SemiBold', fontSize: 12 }}
+                className="text-xl text-gray-900"
+                style={{ fontFamily: 'Poppins-Bold' }}
               >
-                Higher = More Jobs
+                How Your Score Works
               </Text>
+              <TouchableOpacity
+                onPress={() => setShowInfo(false)}
+                className="w-10 h-10 items-center justify-center rounded-full bg-gray-100"
+              >
+                <Ionicons name="close" size={24} color="#6B7280" />
+              </TouchableOpacity>
             </View>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {/* Main Formula */}
+              <View className="bg-purple-50 rounded-xl p-4 mb-5">
+                <Text
+                  className="text-purple-800 text-center mb-2"
+                  style={{ fontFamily: 'Poppins-SemiBold', fontSize: 14 }}
+                >
+                  Provider Score Formula
+                </Text>
+                <Text
+                  className="text-purple-900 text-center"
+                  style={{ fontFamily: 'Poppins-Bold', fontSize: 18 }}
+                >
+                  Rating x Experience Level
+                </Text>
+                <Text
+                  className="text-purple-600 text-center mt-1"
+                  style={{ fontFamily: 'Poppins-Regular', fontSize: 12 }}
+                >
+                  {trustScore.toFixed(1)} x {confidencePercent}% = {bestProviderScore.toFixed(1)}
+                </Text>
+              </View>
+
+              {/* Rating Explanation */}
+              <View className="mb-5">
+                <View className="flex-row items-center mb-2">
+                  <View className="w-8 h-8 bg-amber-100 rounded-lg items-center justify-center mr-3">
+                    <Ionicons name="star" size={18} color="#F59E0B" />
+                  </View>
+                  <Text
+                    className="text-gray-900"
+                    style={{ fontFamily: 'Poppins-SemiBold', fontSize: 16 }}
+                  >
+                    Rating ({trustScore.toFixed(1)}/5)
+                  </Text>
+                </View>
+                <Text
+                  className="text-gray-600 ml-11"
+                  style={{ fontFamily: 'Poppins-Regular', fontSize: 13 }}
+                >
+                  Based on customer reviews. Each new rating gradually updates your score. Keep delivering quality service to maintain high ratings.
+                </Text>
+              </View>
+
+              {/* Experience Explanation */}
+              <View className="mb-5">
+                <View className="flex-row items-center mb-2">
+                  <View className="w-8 h-8 bg-purple-100 rounded-lg items-center justify-center mr-3">
+                    <Ionicons name="briefcase" size={18} color="#7C3AED" />
+                  </View>
+                  <Text
+                    className="text-gray-900"
+                    style={{ fontFamily: 'Poppins-SemiBold', fontSize: 16 }}
+                  >
+                    Experience Level ({confidencePercent}%)
+                  </Text>
+                </View>
+                <Text
+                  className="text-gray-600 ml-11"
+                  style={{ fontFamily: 'Poppins-Regular', fontSize: 13 }}
+                >
+                  Increases as you complete jobs. Reaches 100% after 50 completed jobs. This shows customers you're reliable and experienced.
+                </Text>
+                <View className="ml-11 mt-2 bg-gray-50 rounded-lg p-3">
+                  <Text
+                    className="text-gray-500"
+                    style={{ fontFamily: 'Poppins-Regular', fontSize: 12 }}
+                  >
+                    Your progress: {completedBookings}/50 jobs
+                  </Text>
+                </View>
+              </View>
+
+              {/* Why It Matters */}
+              <View className="mb-5">
+                <View className="flex-row items-center mb-2">
+                  <View className="w-8 h-8 bg-green-100 rounded-lg items-center justify-center mr-3">
+                    <Ionicons name="trending-up" size={18} color="#059669" />
+                  </View>
+                  <Text
+                    className="text-gray-900"
+                    style={{ fontFamily: 'Poppins-SemiBold', fontSize: 16 }}
+                  >
+                    Why It Matters
+                  </Text>
+                </View>
+                <Text
+                  className="text-gray-600 ml-11"
+                  style={{ fontFamily: 'Poppins-Regular', fontSize: 13 }}
+                >
+                  Higher scores mean you get priority for automatic job assignments. When customers request "Book Now", providers with the highest scores are matched first.
+                </Text>
+              </View>
+
+              {/* Tips */}
+              <View className="bg-blue-50 rounded-xl p-4 mb-4">
+                <Text
+                  className="text-blue-800 mb-3"
+                  style={{ fontFamily: 'Poppins-SemiBold', fontSize: 14 }}
+                >
+                  Tips to Improve Your Score
+                </Text>
+
+                <View className="flex-row items-start mb-2">
+                  <Ionicons name="checkmark-circle" size={18} color="#2563EB" style={{ marginTop: 1 }} />
+                  <Text
+                    className="text-blue-700 ml-2 flex-1"
+                    style={{ fontFamily: 'Poppins-Regular', fontSize: 13 }}
+                  >
+                    Complete more jobs to build experience
+                  </Text>
+                </View>
+
+                <View className="flex-row items-start mb-2">
+                  <Ionicons name="checkmark-circle" size={18} color="#2563EB" style={{ marginTop: 1 }} />
+                  <Text
+                    className="text-blue-700 ml-2 flex-1"
+                    style={{ fontFamily: 'Poppins-Regular', fontSize: 13 }}
+                  >
+                    Provide excellent service to get 5-star reviews
+                  </Text>
+                </View>
+
+                <View className="flex-row items-start mb-2">
+                  <Ionicons name="checkmark-circle" size={18} color="#2563EB" style={{ marginTop: 1 }} />
+                  <Text
+                    className="text-blue-700 ml-2 flex-1"
+                    style={{ fontFamily: 'Poppins-Regular', fontSize: 13 }}
+                  >
+                    Respond quickly to booking requests
+                  </Text>
+                </View>
+
+                <View className="flex-row items-start">
+                  <Ionicons name="checkmark-circle" size={18} color="#2563EB" style={{ marginTop: 1 }} />
+                  <Text
+                    className="text-blue-700 ml-2 flex-1"
+                    style={{ fontFamily: 'Poppins-Regular', fontSize: 13 }}
+                  >
+                    Stay online during your available hours
+                  </Text>
+                </View>
+              </View>
+
+              {/* Current Stats Summary */}
+              <View className="bg-gray-50 rounded-xl p-4">
+                <Text
+                  className="text-gray-700 mb-3"
+                  style={{ fontFamily: 'Poppins-SemiBold', fontSize: 14 }}
+                >
+                  Your Current Stats
+                </Text>
+                <View className="flex-row justify-between mb-2">
+                  <Text className="text-gray-500" style={{ fontFamily: 'Poppins-Regular', fontSize: 13 }}>
+                    Provider Score
+                  </Text>
+                  <Text className="text-gray-900" style={{ fontFamily: 'Poppins-SemiBold', fontSize: 13 }}>
+                    {bestProviderScore.toFixed(2)} / 5.0
+                  </Text>
+                </View>
+                <View className="flex-row justify-between mb-2">
+                  <Text className="text-gray-500" style={{ fontFamily: 'Poppins-Regular', fontSize: 13 }}>
+                    Rating
+                  </Text>
+                  <Text className="text-gray-900" style={{ fontFamily: 'Poppins-SemiBold', fontSize: 13 }}>
+                    {trustScore.toFixed(1)} ({totalReviews} reviews)
+                  </Text>
+                </View>
+                <View className="flex-row justify-between mb-2">
+                  <Text className="text-gray-500" style={{ fontFamily: 'Poppins-Regular', fontSize: 13 }}>
+                    Experience Level
+                  </Text>
+                  <Text className="text-gray-900" style={{ fontFamily: 'Poppins-SemiBold', fontSize: 13 }}>
+                    {confidencePercent}%
+                  </Text>
+                </View>
+                <View className="flex-row justify-between">
+                  <Text className="text-gray-500" style={{ fontFamily: 'Poppins-Regular', fontSize: 13 }}>
+                    Jobs Completed
+                  </Text>
+                  <Text className="text-gray-900" style={{ fontFamily: 'Poppins-SemiBold', fontSize: 13 }}>
+                    {completedBookings}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={{ height: 20 }} />
+            </ScrollView>
           </View>
         </View>
-      </View>
-
-      {/* Info Footer */}
-      {completed_bookings < 50 && (
-        <View className="bg-blue-50 mt-4 p-3 rounded-xl flex-row items-start">
-          <Ionicons name="information-circle" size={18} color="#1D4ED8" style={{ marginTop: 1 }} />
-          <Text
-            className="text-blue-800 ml-2 flex-1"
-            style={{ fontFamily: 'Poppins-Regular', fontSize: 11 }}
-          >
-            Complete more jobs to increase your ranking and get more auto-assigned bookings!
-          </Text>
-        </View>
-      )}
-    </TouchableOpacity>
+      </Modal>
+    </>
   );
 };
 

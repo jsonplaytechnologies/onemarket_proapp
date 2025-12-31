@@ -134,12 +134,11 @@ class ApiService {
     }
 
     try {
-      console.log('API Request:', `${this.baseURL}${endpoint}`, config);
+      console.log(`[API] ${config.method || 'GET'} ${endpoint} →`);
       const response = await fetch(`${this.baseURL}${endpoint}`, config);
 
-      console.log('API Response Status:', response.status);
       const data = await response.json();
-      console.log('API Response Data:', data);
+      console.log(`[API] ${endpoint} ← ${response.status}${data.success === false ? ' ERR' : ''}`);
 
       if (!response.ok) {
         // Handle 401 Unauthorized - try to refresh token first
@@ -238,9 +237,7 @@ class ApiService {
         throw error;
       }
       // Wrap other errors
-      console.error('API Error:', error);
-      console.error('API Error Message:', error.message);
-      console.error('API Error Stack:', error.stack);
+      console.error(`[API] ${endpoint} Error:`, error.message);
       throw new ApiError(
         error.message || 'Network error',
         0,

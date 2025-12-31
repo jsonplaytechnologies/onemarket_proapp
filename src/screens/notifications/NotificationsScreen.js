@@ -16,35 +16,63 @@ import { useNotifications } from '../../context/NotificationContext';
 
 // Pro-specific notification icons (outline style like user app)
 const NOTIFICATION_ICONS = {
+  // Booking request types
   new_booking: 'calendar-outline',
+  booking_request: 'calendar-outline',
+  // Timeout types
+  assignment_timeout: 'time-outline',
+  quote_timeout: 'time-outline',
+  // Cancellation
   booking_cancelled: 'close-circle-outline',
+  // Payment
   payment_received: 'card-outline',
+  payment_confirmed: 'card-outline',
+  // Job status
   job_start_confirmed: 'checkmark-circle-outline',
   job_complete_confirmed: 'checkmark-done-circle-outline',
+  // Review
   new_review: 'star-outline',
+  // Withdrawal
   withdrawal_approved: 'wallet-outline',
   withdrawal_completed: 'wallet-outline',
   withdrawal_failed: 'wallet-outline',
+  // Account
   account_approved: 'checkmark-done-circle-outline',
   account_rejected: 'close-circle-outline',
+  // Messages
   message: 'chatbubble-outline',
+  new_message: 'chatbubble-outline',
   default: 'notifications-outline',
 };
 
 // Pro-specific notification colors
 const NOTIFICATION_COLORS = {
+  // Booking request types
   new_booking: '#3B82F6',
+  booking_request: '#3B82F6',
+  // Timeout types - orange/warning
+  assignment_timeout: '#F59E0B',
+  quote_timeout: '#F59E0B',
+  // Cancellation
   booking_cancelled: '#EF4444',
+  // Payment
   payment_received: '#10B981',
+  payment_confirmed: '#10B981',
+  // Job status
   job_start_confirmed: '#10B981',
   job_complete_confirmed: '#10B981',
+  // Review
   new_review: '#F59E0B',
+  // Withdrawal
   withdrawal_approved: '#10B981',
   withdrawal_completed: '#10B981',
   withdrawal_failed: '#EF4444',
+  // Account
   account_approved: '#10B981',
   account_rejected: '#EF4444',
+  // Messages
   message: '#3B82F6',
+  new_message: '#3B82F6',
   default: '#6B7280',
 };
 
@@ -52,45 +80,22 @@ const NotificationsScreen = ({ navigation }) => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const { markAllAsRead } = useNotifications();
+  const { markAsRead, markAllAsRead } = useNotifications();
 
   useFocusEffect(
     useCallback(() => {
-      fetchNotificationsAndMarkRead();
+      fetchNotifications();
+
+      // Mark as read when leaving the screen
+      return () => {
+        markAllAsRead();
+      };
     }, [])
   );
 
-  const fetchNotificationsAndMarkRead = async () => {
-    try {
-      setLoading(true);
-      const response = await apiService.get(API_ENDPOINTS.NOTIFICATIONS);
-      if (response.success && response.data) {
-        const notificationsList = response.data.notifications || response.data || [];
-        const notifs = Array.isArray(notificationsList) ? notificationsList : [];
-
-        // Show notifications with their actual read state first
-        setNotifications(notifs);
-
-        // Mark all as read on server and update badge count after a delay
-        const hasUnread = notifs.some(n => !(n.is_read || n.isRead));
-        if (hasUnread) {
-          // Delay marking as read so user can see unread highlights
-          setTimeout(() => {
-            markAllAsRead();
-            // Also update local state to remove blue tint
-            setNotifications(prev => prev.map(n => ({ ...n, is_read: true, isRead: true })));
-          }, 1500);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const fetchNotifications = async () => {
     try {
+      setLoading(true);
       const response = await apiService.get(API_ENDPOINTS.NOTIFICATIONS);
       if (response.success && response.data) {
         const notificationsList = response.data.notifications || response.data || [];
@@ -98,6 +103,8 @@ const NotificationsScreen = ({ navigation }) => {
       }
     } catch (error) {
       console.error('Error fetching notifications:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -107,7 +114,18 @@ const NotificationsScreen = ({ navigation }) => {
     setRefreshing(false);
   };
 
-  const handleNotificationPress = (notification) => {
+  const handleNotificationPress = async (notification) => {
+    // Mark notification as read
+    const isRead = notification.is_read || notification.isRead;
+    if (!isRead) {
+      await markAsRead(notification.id);
+      // Update local state to reflect the change immediately
+      setNotifications(prev => prev.map(n =>
+        n.id === notification.id ? { ...n, is_read: true, isRead: true } : n
+      ));
+    }
+
+    // Navigate to booking details if applicable
     const bookingId = notification.booking_id || notification.bookingId;
     if (bookingId) {
       navigation.navigate('BookingDetails', { bookingId });

@@ -185,8 +185,7 @@ const AvailabilityScreen = ({ navigation }) => {
               className="text-blue-800 ml-3 flex-1"
               style={{ fontFamily: 'Poppins-Regular', fontSize: 13 }}
             >
-              Set your recurring weekly availability. You'll only receive booking requests during
-              these times.
+              Set your weekly schedule. Users will see these times as available when scheduling appointments with you.
             </Text>
           </View>
         </View>

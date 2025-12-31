@@ -14,18 +14,30 @@ const OnboardingHomeScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [profile, setProfile] = useState(null);
+  const [availability, setAvailability] = useState([]);
 
   useFocusEffect(
     useCallback(() => {
-      loadProfile();
+      loadProfileAndAvailability();
     }, [])
   );
 
-  const loadProfile = async () => {
+  const loadProfileAndAvailability = async () => {
     try {
-      const response = await apiService.get(API_ENDPOINTS.PRO_PROFILE);
-      if (response.success) {
-        setProfile(response.data);
+      // Fetch profile and availability in parallel
+      const [profileResponse, availabilityResponse] = await Promise.all([
+        apiService.get(API_ENDPOINTS.PRO_PROFILE).catch(() => null),
+        apiService.get(API_ENDPOINTS.PRO_AVAILABILITY_GET).catch(() => null),
+      ]);
+
+      if (profileResponse?.success) {
+        setProfile(profileResponse.data);
+      }
+
+      if (availabilityResponse?.success && availabilityResponse.data) {
+        // Filter for active slots only
+        const activeSlots = availabilityResponse.data.filter(slot => slot.is_active);
+        setAvailability(activeSlots);
       }
     } catch (error) {
       // Handle pending approval - show empty profile state
@@ -40,20 +52,23 @@ const OnboardingHomeScreen = ({ navigation }) => {
   };
 
   const getStepStatus = (step) => {
-    if (!profile) return 'pending';
+    if (!profile && step !== 'schedule') return 'pending';
 
     // Handle snake_case from API
-    const idNumber = profile.id_number || profile.idNumber;
-    const isIdVerified = profile.is_id_verified || profile.isIdVerified;
+    const idNumber = profile?.id_number || profile?.idNumber;
+    const isIdVerified = profile?.is_id_verified || profile?.isIdVerified;
 
     switch (step) {
       case 'documents':
         // Submitted documents count as completed (green), verified is also completed
         return idNumber ? 'completed' : 'pending';
       case 'services':
-        return profile.services && profile.services.length > 0 ? 'completed' : 'pending';
+        return profile?.services && profile.services.length > 0 ? 'completed' : 'pending';
       case 'zones':
-        return profile.zones && profile.zones.length > 0 ? 'completed' : 'pending';
+        return profile?.zones && profile.zones.length > 0 ? 'completed' : 'pending';
+      case 'schedule':
+        // At least one active availability slot required
+        return availability.length > 0 ? 'completed' : 'pending';
       default:
         return 'pending';
     }
@@ -63,7 +78,8 @@ const OnboardingHomeScreen = ({ navigation }) => {
     return (
       getStepStatus('documents') === 'completed' &&
       getStepStatus('services') === 'completed' &&
-      getStepStatus('zones') === 'completed'
+      getStepStatus('zones') === 'completed' &&
+      getStepStatus('schedule') === 'completed'
     );
   };
 
@@ -108,6 +124,13 @@ const OnboardingHomeScreen = ({ navigation }) => {
       description: 'Choose the areas where you provide services',
       icon: 'location-outline',
       screen: 'AddZones',
+    },
+    {
+      id: 'schedule',
+      title: 'Set Your Schedule',
+      description: 'Set your weekly availability for appointments',
+      icon: 'calendar-outline',
+      screen: 'Availability',
     },
   ];
 

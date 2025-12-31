@@ -12,8 +12,11 @@ export const useSocket = () => {
   return socketContext;
 };
 
+// Terminal booking statuses that don't need socket room subscription
+const TERMINAL_STATUSES = ['rejected', 'cancelled', 'failed', 'expired', 'completed', 'quote_expired', 'quote_rejected'];
+
 // Hook for booking-specific socket events (Pro version)
-export const useBookingSocket = (bookingId) => {
+export const useBookingSocket = (bookingId, initialStatus = null) => {
   const {
     isConnected,
     joinBooking,
@@ -29,6 +32,7 @@ export const useBookingSocket = (bookingId) => {
   const [bookingStatus, setBookingStatus] = useState(null);
   const [isUserTyping, setIsUserTyping] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [joinError, setJoinError] = useState(null);
 
   // Use ref to track current bookingId for handlers to avoid stale closures
   const bookingIdRef = useRef(bookingId);
@@ -53,8 +57,13 @@ export const useBookingSocket = (bookingId) => {
   const handleStatusChange = useCallback((data) => {
     if (data.bookingId === bookingIdRef.current) {
       setBookingStatus(data);
+      // If booking reached a terminal status, leave the room
+      if (TERMINAL_STATUSES.includes(data.status)) {
+        console.log(`Booking ${data.bookingId} reached terminal status: ${data.status}, leaving room`);
+        leaveBooking(data.bookingId);
+      }
     }
-  }, []);
+  }, [leaveBooking]);
 
   const handleTyping = useCallback((data) => {
     if (data.bookingId === bookingIdRef.current) {
@@ -121,7 +130,21 @@ export const useBookingSocket = (bookingId) => {
 
   useEffect(() => {
     if (isConnected && bookingId) {
-      joinBooking(bookingId);
+      // Don't try to join room for terminal status bookings
+      const currentStatus = bookingStatus?.status || initialStatus;
+      if (currentStatus && TERMINAL_STATUSES.includes(currentStatus)) {
+        console.log(`Skipping room join for terminal status booking: ${bookingId} (${currentStatus})`);
+        return;
+      }
+
+      // Join booking room with callback to handle status updates (including terminal states)
+      joinBooking(bookingId, (statusData) => {
+        if (statusData && statusData.bookingId === bookingId) {
+          setBookingStatus(statusData);
+          // Clear any previous join error
+          setJoinError(null);
+        }
+      });
 
       // Register all event handlers
       on('new-message', handleNewMessage);
@@ -246,6 +269,7 @@ export const useBookingSocket = (bookingId) => {
     bookingStatus,
     isUserTyping,
     notifications,
+    joinError,
     send,
     sendAsync,
     typing,

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import { COLORS } from '../../constants/colors';
 import { BookingCard } from '../../components/bookings';
 import { useNotifications } from '../../context/NotificationContext';
 import { useSocketContext } from '../../context/SocketContext';
+import cacheManager, { CACHE_KEYS, CACHE_TYPES } from '../../utils/cacheManager';
 
 const STATUS_FILTERS = [
   { key: 'all', label: 'All' },
@@ -52,14 +53,76 @@ const BookingsScreen = ({ navigation }) => {
   const { refreshTrigger } = useNotifications();
   const { isConnected, on, off } = useSocketContext();
 
+  // Track last refresh trigger to prevent duplicate fetches
+  const lastRefreshTriggerRef = useRef(0);
+
+  // Memoized fetch function for bookings
+  const fetchBookings = useCallback(async (pageNum = 1, reset = false) => {
+    try {
+      if (reset) {
+        setLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
+
+      // Use deduplication to prevent duplicate requests
+      const response = await cacheManager.deduplicatedFetch(
+        `${CACHE_KEYS.BOOKINGS}:page${pageNum}`,
+        () => apiService.get(`${API_ENDPOINTS.BOOKINGS}?page=${pageNum}&limit=20`)
+      );
+
+      if (response.success) {
+        const newBookings = response.data || [];
+
+        if (reset) {
+          setBookings(newBookings);
+          // Cache the first page for quick access
+          cacheManager.set(CACHE_KEYS.BOOKINGS, newBookings);
+        } else {
+          setBookings((prev) => {
+            const updated = [...prev, ...newBookings];
+            // Update cache with all loaded bookings
+            cacheManager.set(CACHE_KEYS.BOOKINGS, updated);
+            return updated;
+          });
+        }
+
+        setPage(pageNum);
+        setHasMore(
+          response.pagination?.page < response.pagination?.totalPages
+        );
+      }
+    } catch (error) {
+      console.error('Error fetching bookings:', error);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  }, []);
+
+  // Only fetch on focus if data is stale
   useFocusEffect(
     useCallback(() => {
-      fetchBookings(1, true);
-    }, [])
+      // Check if cache is stale
+      if (cacheManager.isStale(CACHE_KEYS.BOOKINGS, CACHE_TYPES.BOOKINGS)) {
+        fetchBookings(1, true);
+      } else {
+        // Use cached data
+        const cached = cacheManager.get(CACHE_KEYS.BOOKINGS, CACHE_TYPES.BOOKINGS);
+        if (cached && cached.length > 0) {
+          setBookings(cached);
+          setLoading(false);
+        } else {
+          fetchBookings(1, true);
+        }
+      }
+    }, [fetchBookings])
   );
 
   useEffect(() => {
-    if (refreshTrigger > 0) {
+    // Only respond to new refresh triggers (debounced from NotificationContext)
+    if (refreshTrigger > 0 && refreshTrigger !== lastRefreshTriggerRef.current) {
+      lastRefreshTriggerRef.current = refreshTrigger;
       fetchBookings(1, true);
     }
   }, [refreshTrigger]);
@@ -88,40 +151,6 @@ const BookingsScreen = ({ navigation }) => {
   useEffect(() => {
     applyFilter();
   }, [bookings, selectedFilter]);
-
-  const fetchBookings = async (pageNum = 1, reset = false) => {
-    try {
-      if (reset) {
-        setLoading(true);
-      } else {
-        setLoadingMore(true);
-      }
-
-      const response = await apiService.get(
-        `${API_ENDPOINTS.BOOKINGS}?page=${pageNum}&limit=20`
-      );
-
-      if (response.success) {
-        const newBookings = response.data || [];
-
-        if (reset) {
-          setBookings(newBookings);
-        } else {
-          setBookings((prev) => [...prev, ...newBookings]);
-        }
-
-        setPage(pageNum);
-        setHasMore(
-          response.pagination?.page < response.pagination?.totalPages
-        );
-      }
-    } catch (error) {
-      console.error('Error fetching bookings:', error);
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  };
 
   const applyFilter = () => {
     let filtered = [...bookings];

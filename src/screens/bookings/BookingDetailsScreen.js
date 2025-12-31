@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import apiService, { ApiError } from '../../services/api';
 import { API_ENDPOINTS } from '../../constants/api';
@@ -23,10 +24,14 @@ import {
   TimeoutCountdown,
   BookNowBadge,
   CustomerAnswersCard,
-  QuoteFormModal
+  QuoteFormModal,
+  getActionComponent,
 } from '../../components/bookings';
 import Button from '../../components/common/Button';
 import { useBookingSocket } from '../../hooks/useSocket';
+import { handleApiError } from '../../utils/errorHandler';
+
+// StarRating component has been moved to ActionButtons/CompletedActions.js
 
 const BookingDetailsScreen = ({ navigation, route }) => {
   const { bookingId } = route.params;
@@ -37,34 +42,75 @@ const BookingDetailsScreen = ({ navigation, route }) => {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [answers, setAnswers] = useState([]);
+  const [isTimedOut, setIsTimedOut] = useState(false);
+
+  // Refs to prevent duplicate fetches
+  const isFetchingRef = useRef(false);
+  const hasFetchedRef = useRef(false);
+  const isMountedRef = useRef(true);
 
   const { bookingStatus } = useBookingSocket(bookingId);
 
+  // Track mounted state
   useEffect(() => {
-    fetchBookingDetails();
-  }, [bookingId]);
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
+  // Fetch on mount and when screen regains focus (but only if stale)
+  useFocusEffect(
+    useCallback(() => {
+      if (!hasFetchedRef.current) {
+        hasFetchedRef.current = true;
+        fetchBookingDetails();
+      }
+      return () => {};
+    }, [bookingId])
+  );
+
+  // Handle socket status updates
   useEffect(() => {
     if (bookingStatus) {
-      setBooking((prev) => ({ ...prev, ...bookingStatus }));
+      setBooking((prev) => (prev ? { ...prev, ...bookingStatus } : prev));
     }
   }, [bookingStatus]);
 
-  const fetchBookingDetails = async () => {
+  const fetchBookingDetails = async (force = false) => {
+    // Prevent concurrent fetches
+    if (isFetchingRef.current && !force) return;
+
     try {
+      isFetchingRef.current = true;
       const response = await apiService.get(API_ENDPOINTS.BOOKING_DETAILS(bookingId));
+
+      if (!isMountedRef.current) return;
+
       if (response.success) {
         setBooking(response.data);
-        // Fetch answers for Phase 2 bookings
-        if (['waiting_approval', 'waiting_quote', 'waiting_acceptance'].includes(response.data?.status)) {
+        // Reset timeout state if booking status changed to a terminal state
+        if (['expired', 'failed', 'cancelled', 'rejected'].includes(response.data?.status)) {
+          setIsTimedOut(true);
+        } else if (!['waiting_approval', 'waiting_quote', 'waiting_acceptance'].includes(response.data?.status)) {
+          // If not in limbo state anymore, clear the timeout flag
+          setIsTimedOut(false);
+        }
+        // Fetch answers for Phase 2 bookings (only if not already loaded)
+        if (['waiting_approval', 'waiting_quote', 'waiting_acceptance'].includes(response.data?.status) && answers.length === 0) {
           fetchBookingAnswers();
         }
       }
     } catch (error) {
       console.error('Error fetching booking:', error);
-      Alert.alert('Error', 'Failed to load booking details');
+      if (isMountedRef.current) {
+        Alert.alert('Error', 'Failed to load booking details');
+      }
     } finally {
-      setLoading(false);
+      isFetchingRef.current = false;
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
   };
 
@@ -83,21 +129,16 @@ const BookingDetailsScreen = ({ navigation, route }) => {
   const handleAcceptAssignment = async () => {
     setActionLoading(true);
     try {
-      await apiService.patch(API_ENDPOINTS.BOOKING_ACCEPT_ASSIGNMENT(bookingId));
+      const response = await apiService.patch(API_ENDPOINTS.BOOKING_ACCEPT_ASSIGNMENT(bookingId));
       Alert.alert('Success', 'Assignment accepted! Discuss scope with customer before sending quote.');
-      fetchBookingDetails();
-    } catch (error) {
-      if (error.code === 'RATE_LIMITED') {
-        Alert.alert(
-          'Please Wait',
-          `Too many requests. Try again in ${error.retryAfter} seconds.`
-        );
-      } else if (error.code === 'VALIDATION_ERROR') {
-        const errorMsg = error.errors?.map(e => e.msg).join('\n') || error.message;
-        Alert.alert('Validation Error', errorMsg);
+      // Update booking locally - socket will also update but this provides instant feedback
+      if (response.data?.booking) {
+        setBooking((prev) => ({ ...prev, ...response.data.booking }));
       } else {
-        Alert.alert('Error', error.message || 'Failed to accept assignment');
+        setBooking((prev) => ({ ...prev, status: 'waiting_quote' }));
       }
+    } catch (error) {
+      handleApiError(error, 'Failed to accept assignment');
     } finally {
       setActionLoading(false);
     }
@@ -119,20 +160,17 @@ const BookingDetailsScreen = ({ navigation, route }) => {
       Alert.alert('Assignment Rejected', 'The booking has been rejected and reassigned.');
       navigation.goBack();
     } catch (error) {
-      if (error.code === 'RATE_LIMITED') {
-        Alert.alert(
-          'Please Wait',
-          `Too many requests. Try again in ${error.retryAfter} seconds.`
-        );
-      } else if (error.code === 'VALIDATION_ERROR') {
-        const errorMsg = error.errors?.map(e => e.msg).join('\n') || error.message;
-        Alert.alert('Validation Error', errorMsg);
-      } else {
-        Alert.alert('Error', error.message || 'Failed to reject assignment');
-      }
+      handleApiError(error, 'Failed to reject assignment');
     } finally {
       setActionLoading(false);
     }
+  };
+
+  // Handle timeout expiration
+  const handleTimeout = () => {
+    setIsTimedOut(true);
+    // Refresh booking details to get the updated status from backend
+    fetchBookingDetails();
   };
 
   // Phase 2: Send Quote with Duration
@@ -145,19 +183,15 @@ const BookingDetailsScreen = ({ navigation, route }) => {
       });
       setShowQuotationModal(false);
       Alert.alert('Success', 'Quote sent to customer');
-      fetchBookingDetails();
+      // Update locally - socket will broadcast status change
+      setBooking((prev) => ({
+        ...prev,
+        status: 'waiting_acceptance',
+        quotation_amount: amount,
+        quoted_duration_minutes: durationMinutes,
+      }));
     } catch (error) {
-      if (error.code === 'RATE_LIMITED') {
-        Alert.alert(
-          'Please Wait',
-          `Too many requests. Try again in ${error.retryAfter} seconds.`
-        );
-      } else if (error.code === 'VALIDATION_ERROR') {
-        const errorMsg = error.errors?.map(e => e.msg).join('\n') || error.message;
-        Alert.alert('Validation Error', errorMsg);
-      } else {
-        Alert.alert('Error', error.message || 'Failed to send quote');
-      }
+      handleApiError(error, 'Failed to send quote');
     } finally {
       setActionLoading(false);
     }
@@ -168,19 +202,10 @@ const BookingDetailsScreen = ({ navigation, route }) => {
     try {
       await apiService.patch(API_ENDPOINTS.BOOKING_ON_THE_WAY(bookingId));
       Alert.alert('Success', 'Customer notified that you are on the way');
-      fetchBookingDetails();
+      // Update locally - socket will broadcast status change
+      setBooking((prev) => ({ ...prev, status: 'on_the_way' }));
     } catch (error) {
-      if (error.code === 'RATE_LIMITED') {
-        Alert.alert(
-          'Please Wait',
-          `Too many requests. Try again in ${error.retryAfter} seconds.`
-        );
-      } else if (error.code === 'VALIDATION_ERROR') {
-        const errorMsg = error.errors?.map(e => e.msg).join('\n') || error.message;
-        Alert.alert('Validation Error', errorMsg);
-      } else {
-        Alert.alert('Error', error.message || 'Failed to update status');
-      }
+      handleApiError(error, 'Failed to update status');
     } finally {
       setActionLoading(false);
     }
@@ -191,19 +216,10 @@ const BookingDetailsScreen = ({ navigation, route }) => {
     try {
       await apiService.patch(API_ENDPOINTS.BOOKING_START(bookingId));
       Alert.alert('Success', 'Job start request sent. Waiting for customer confirmation.');
-      fetchBookingDetails();
+      // Update locally - socket will broadcast status change
+      setBooking((prev) => ({ ...prev, status: 'job_start_requested' }));
     } catch (error) {
-      if (error.code === 'RATE_LIMITED') {
-        Alert.alert(
-          'Please Wait',
-          `Too many requests. Try again in ${error.retryAfter} seconds.`
-        );
-      } else if (error.code === 'VALIDATION_ERROR') {
-        const errorMsg = error.errors?.map(e => e.msg).join('\n') || error.message;
-        Alert.alert('Validation Error', errorMsg);
-      } else {
-        Alert.alert('Error', error.message || 'Failed to request job start');
-      }
+      handleApiError(error, 'Failed to request job start');
     } finally {
       setActionLoading(false);
     }
@@ -214,19 +230,10 @@ const BookingDetailsScreen = ({ navigation, route }) => {
     try {
       await apiService.patch(API_ENDPOINTS.BOOKING_COMPLETE(bookingId));
       Alert.alert('Success', 'Completion request sent. Waiting for customer confirmation.');
-      fetchBookingDetails();
+      // Update locally - socket will broadcast status change
+      setBooking((prev) => ({ ...prev, status: 'job_complete_requested' }));
     } catch (error) {
-      if (error.code === 'RATE_LIMITED') {
-        Alert.alert(
-          'Please Wait',
-          `Too many requests. Try again in ${error.retryAfter} seconds.`
-        );
-      } else if (error.code === 'VALIDATION_ERROR') {
-        const errorMsg = error.errors?.map(e => e.msg).join('\n') || error.message;
-        Alert.alert('Validation Error', errorMsg);
-      } else {
-        Alert.alert('Error', error.message || 'Failed to request completion');
-      }
+      handleApiError(error, 'Failed to request completion');
     } finally {
       setActionLoading(false);
     }
@@ -262,207 +269,65 @@ const BookingDetailsScreen = ({ navigation, route }) => {
     });
   };
 
+  // Format scheduled datetime with relative dates
+  const formatScheduledDateTime = (dateString) => {
+    if (!dateString) return 'N/A';
+
+    const date = new Date(dateString);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+    const time = date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    if (dateOnly.getTime() === today.getTime()) {
+      return `Today at ${time}`;
+    } else if (dateOnly.getTime() === tomorrow.getTime()) {
+      return `Tomorrow at ${time}`;
+    } else {
+      return `${date.toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric'
+      })} at ${time}`;
+    }
+  };
+
+  /**
+   * Render action buttons using component map pattern
+   * Each status has its own dedicated component in ActionButtons/
+   */
   const renderActionButtons = () => {
     const status = booking?.status;
+    const ActionComponent = getActionComponent(status);
 
-    switch (status) {
-      // Phase 2: New Assignment - waiting_approval
-      case 'waiting_approval':
-        return (
-          <View>
-            {/* Show customer's answers if available */}
-            {answers.length > 0 && <CustomerAnswersCard answers={answers} />}
+    if (!ActionComponent) return null;
 
-            <View className="flex-row space-x-3">
-              <View className="flex-1 mr-2">
-                <Button
-                  title="Accept"
-                  onPress={handleAcceptAssignment}
-                  loading={actionLoading}
-                  variant="success"
-                  icon={<Ionicons name="checkmark-circle-outline" size={20} color="#FFFFFF" />}
-                />
-              </View>
-              <View className="flex-1">
-                <Button
-                  title="Reject"
-                  onPress={() => setShowRejectModal(true)}
-                  variant="danger"
-                  icon={<Ionicons name="close-circle-outline" size={20} color="#FFFFFF" />}
-                />
-              </View>
-            </View>
-          </View>
-        );
+    // Props mapping for each component type
+    const componentProps = {
+      booking,
+      bookingId,
+      answers,
+      isTimedOut,
+      actionLoading,
+      navigation,
+      // Action handlers
+      onAccept: handleAcceptAssignment,
+      onReject: () => setShowRejectModal(true),
+      onSendQuote: () => setShowQuotationModal(true),
+      onPress: {
+        paid: handleOnTheWay,
+        on_the_way: handleRequestStart,
+        job_started: handleRequestComplete,
+      }[status],
+    };
 
-      // Phase 2: Send Quote - waiting_quote
-      case 'waiting_quote':
-        return (
-          <View>
-            {/* Show customer's answers */}
-            {answers.length > 0 && <CustomerAnswersCard answers={answers} />}
-
-            {/* Chat Guidance */}
-            <View className="bg-blue-50 p-4 rounded-xl mb-4">
-              <View className="flex-row items-start">
-                <Ionicons name="information-circle" size={22} color="#1D4ED8" />
-                <Text
-                  className="text-blue-800 ml-3 flex-1"
-                  style={{ fontFamily: 'Poppins-Regular', fontSize: 13 }}
-                >
-                  Discuss the job scope and price with the customer in chat before sending your quote.
-                  You can only send one quote - make it count!
-                </Text>
-              </View>
-            </View>
-
-            {/* Action Buttons */}
-            <View className="flex-row space-x-3">
-              <View className="flex-1 mr-2">
-                <Button
-                  title="Chat"
-                  onPress={() => navigation.navigate('Chat', { bookingId, booking })}
-                  variant="secondary"
-                  icon={<Ionicons name="chatbubble-outline" size={20} color={COLORS.primary} />}
-                />
-              </View>
-              <View className="flex-1">
-                <Button
-                  title="Send Quote"
-                  onPress={() => setShowQuotationModal(true)}
-                  icon={<Ionicons name="document-text-outline" size={20} color="#FFFFFF" />}
-                />
-              </View>
-            </View>
-          </View>
-        );
-
-      // Phase 2: Waiting for customer to accept quote - waiting_acceptance
-      case 'waiting_acceptance':
-        return (
-          <View className="bg-indigo-50 p-5 rounded-xl">
-            <View className="flex-row items-center mb-3">
-              <Ionicons name="time-outline" size={24} color="#4F46E5" />
-              <Text
-                className="text-indigo-800 ml-2"
-                style={{ fontFamily: 'Poppins-SemiBold', fontSize: 15 }}
-              >
-                Waiting for Customer
-              </Text>
-            </View>
-
-            <View className="border-t border-indigo-200 pt-3 mt-2">
-              <Text
-                className="text-indigo-700 mb-1"
-                style={{ fontFamily: 'Poppins-Regular', fontSize: 13 }}
-              >
-                Your Quote
-              </Text>
-              <View className="flex-row items-baseline">
-                <Text
-                  className="text-indigo-900"
-                  style={{ fontFamily: 'Poppins-Bold', fontSize: 28 }}
-                >
-                  {formatCurrency(booking.quotation_amount)}
-                </Text>
-                {booking.quoted_duration_minutes && (
-                  <Text
-                    className="text-indigo-600 ml-3"
-                    style={{ fontFamily: 'Poppins-Regular', fontSize: 14 }}
-                  >
-                    ({Math.floor(booking.quoted_duration_minutes / 60)}h {booking.quoted_duration_minutes % 60}m)
-                  </Text>
-                )}
-              </View>
-            </View>
-
-            <Text
-              className="text-indigo-600 text-center mt-4"
-              style={{ fontFamily: 'Poppins-Regular', fontSize: 13 }}
-            >
-              Customer has been notified of your quote
-            </Text>
-          </View>
-        );
-
-      case 'paid':
-        return (
-          <Button
-            title="I'm On The Way"
-            onPress={handleOnTheWay}
-            loading={actionLoading}
-            icon={<Ionicons name="navigate-outline" size={20} color="#FFFFFF" />}
-          />
-        );
-
-      case 'on_the_way':
-        return (
-          <Button
-            title="Request Job Start"
-            onPress={handleRequestStart}
-            loading={actionLoading}
-            icon={<Ionicons name="play-circle-outline" size={20} color="#FFFFFF" />}
-          />
-        );
-
-      case 'job_start_requested':
-        return (
-          <View className="bg-yellow-50 p-4 rounded-xl">
-            <View className="flex-row items-center">
-              <Ionicons name="time" size={24} color={COLORS.warning} />
-              <Text
-                className="text-yellow-800 ml-2"
-                style={{ fontFamily: 'Poppins-Medium' }}
-              >
-                Waiting for customer to confirm job start
-              </Text>
-            </View>
-          </View>
-        );
-
-      case 'job_started':
-        return (
-          <Button
-            title="Request Job Completion"
-            onPress={handleRequestComplete}
-            loading={actionLoading}
-            icon={<Ionicons name="checkmark-done-outline" size={20} color="#FFFFFF" />}
-          />
-        );
-
-      case 'job_complete_requested':
-        return (
-          <View className="bg-yellow-50 p-4 rounded-xl">
-            <View className="flex-row items-center">
-              <Ionicons name="time" size={24} color={COLORS.warning} />
-              <Text
-                className="text-yellow-800 ml-2"
-                style={{ fontFamily: 'Poppins-Medium' }}
-              >
-                Waiting for customer to confirm completion
-              </Text>
-            </View>
-          </View>
-        );
-
-      case 'completed':
-        return (
-          <View className="bg-green-50 p-4 rounded-xl">
-            <View className="flex-row items-center">
-              <Ionicons name="checkmark-circle" size={24} color={COLORS.success} />
-              <Text
-                className="text-green-800 ml-2"
-                style={{ fontFamily: 'Poppins-Medium' }}
-              >
-                Job completed! Earnings credited to your wallet.
-              </Text>
-            </View>
-          </View>
-        );
-
-      default:
-        return null;
-    }
+    return <ActionComponent {...componentProps} />;
   };
 
   if (loading) {
@@ -595,6 +460,35 @@ const BookingDetailsScreen = ({ navigation, route }) => {
           </View>
         )}
 
+        {/* Scheduled Time - Prominent display */}
+        {(booking.requested_datetime || booking.is_book_now) && (
+          <View className="bg-white mx-4 mt-4 rounded-xl p-4 border border-gray-200">
+            <View className="flex-row items-center">
+              <View className={`w-12 h-12 rounded-xl items-center justify-center mr-4 ${booking.is_book_now ? 'bg-red-100' : 'bg-blue-100'}`}>
+                <Ionicons
+                  name={booking.is_book_now ? 'flash' : 'calendar'}
+                  size={24}
+                  color={booking.is_book_now ? '#EF4444' : COLORS.primary}
+                />
+              </View>
+              <View className="flex-1">
+                <Text
+                  className="text-gray-500"
+                  style={{ fontFamily: 'Poppins-Regular', fontSize: 12 }}
+                >
+                  {booking.is_book_now ? 'Immediate Request' : 'Scheduled for'}
+                </Text>
+                <Text
+                  className={booking.is_book_now ? 'text-red-600' : 'text-gray-900'}
+                  style={{ fontFamily: 'Poppins-SemiBold', fontSize: 18 }}
+                >
+                  {booking.is_book_now ? 'ASAP - As Soon As Possible' : formatScheduledDateTime(booking.requested_datetime)}
+                </Text>
+              </View>
+            </View>
+          </View>
+        )}
+
         {/* Timeout Countdown for Limbo States */}
         {booking.limbo_timeout_at && ['waiting_approval', 'waiting_quote', 'waiting_acceptance'].includes(booking.status) && (
           <View className="mx-4 mt-4">
@@ -607,6 +501,7 @@ const BookingDetailsScreen = ({ navigation, route }) => {
                   ? 'Time to Submit Quote'
                   : 'Customer Response Time'
               }
+              onTimeout={handleTimeout}
             />
           </View>
         )}

@@ -1,7 +1,8 @@
-import React, { createContext, useState, useEffect, useContext, useRef } from 'react';
+import React, { createContext, useState, useEffect, useContext, useRef, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import apiService from '../services/api';
 import { API_ENDPOINTS } from '../constants/api';
+import cacheManager, { CACHE_KEYS, CACHE_TYPES } from '../utils/cacheManager';
 
 export const AuthContext = createContext();
 
@@ -10,6 +11,7 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [profileLastFetched, setProfileLastFetched] = useState(null);
   const navigationRef = useRef(null);
 
   useEffect(() => {
@@ -47,20 +49,44 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const fetchUserProfile = async (authToken) => {
+  const fetchUserProfile = useCallback(async (forceRefresh = false) => {
     try {
-      const response = await apiService.get(API_ENDPOINTS.ME);
+      // Check cache first unless force refresh
+      if (!forceRefresh && !cacheManager.isStale(CACHE_KEYS.PROFILE, CACHE_TYPES.PROFILE)) {
+        const cached = cacheManager.get(CACHE_KEYS.PROFILE, CACHE_TYPES.PROFILE);
+        if (cached) {
+          return cached;
+        }
+      }
+
+      const response = await cacheManager.deduplicatedFetch(
+        CACHE_KEYS.PROFILE,
+        () => apiService.get(API_ENDPOINTS.ME)
+      );
+
       if (response.success) {
         setUser(response.data);
         await AsyncStorage.setItem('user', JSON.stringify(response.data));
-        return response.data; // Return updated user data
+        cacheManager.set(CACHE_KEYS.PROFILE, response.data);
+        setProfileLastFetched(Date.now());
+        return response.data;
       }
       return null;
     } catch (error) {
       console.error('Fetch user error:', error);
       return null;
     }
-  };
+  }, []);
+
+  // Get profile from cache without fetching (for screens that don't need fresh data)
+  const getProfileFromCache = useCallback(() => {
+    return user;
+  }, [user]);
+
+  // Check if profile is stale and needs refresh
+  const isProfileStale = useCallback(() => {
+    return cacheManager.isStale(CACHE_KEYS.PROFILE, CACHE_TYPES.PROFILE);
+  }, []);
 
   const login = async (tokenValue, userData, refreshTokenValue = null) => {
     try {
@@ -80,9 +106,12 @@ export const AuthProvider = ({ children }) => {
     try {
       // Use api service to clear tokens (clears token, refreshToken, and user)
       await apiService.clearTokens();
+      // Clear all cached data on logout
+      cacheManager.clear();
       setToken(null);
       setUser(null);
       setIsAuthenticated(false);
+      setProfileLastFetched(null);
     } catch (error) {
       console.error('Logout error:', error);
     }
@@ -122,10 +151,13 @@ export const AuthProvider = ({ children }) => {
     token,
     loading,
     isAuthenticated,
+    profileLastFetched,
     login,
     logout,
     updateUser,
     fetchUserProfile,
+    getProfileFromCache,
+    isProfileStale,
     isApproved,
     isPending,
     isRejected,

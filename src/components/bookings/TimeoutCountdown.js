@@ -1,13 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../constants/colors';
 
-const TimeoutCountdown = ({ timeoutAt, label = 'Time Remaining' }) => {
+const TimeoutCountdown = ({ timeoutAt, label = 'Time Remaining', onTimeout }) => {
   const [timeLeft, setTimeLeft] = useState(null);
+  const [isExpired, setIsExpired] = useState(false);
+  const onTimeoutCalledRef = useRef(false);
 
   useEffect(() => {
     if (!timeoutAt) return;
+
+    // Reset the callback guard when timeoutAt changes
+    onTimeoutCalledRef.current = false;
 
     const calculateTimeLeft = () => {
       const now = new Date();
@@ -16,6 +21,12 @@ const TimeoutCountdown = ({ timeoutAt, label = 'Time Remaining' }) => {
 
       if (diff <= 0) {
         setTimeLeft(null);
+        setIsExpired(true);
+        // Call onTimeout callback only once
+        if (onTimeout && !onTimeoutCalledRef.current) {
+          onTimeoutCalledRef.current = true;
+          onTimeout();
+        }
         return;
       }
 
@@ -23,13 +34,39 @@ const TimeoutCountdown = ({ timeoutAt, label = 'Time Remaining' }) => {
       const seconds = Math.floor((diff % 60000) / 1000);
 
       setTimeLeft({ minutes, seconds, total: diff });
+      setIsExpired(false);
     };
 
     calculateTimeLeft();
     const interval = setInterval(calculateTimeLeft, 1000);
 
     return () => clearInterval(interval);
-  }, [timeoutAt]);
+  }, [timeoutAt, onTimeout]);
+
+  // Show expired state
+  if (isExpired) {
+    return (
+      <View className="bg-red-50 p-4 rounded-xl mb-4">
+        <View className="flex-row items-center">
+          <Ionicons name="time" size={24} color="#DC2626" />
+          <View className="flex-1 ml-3">
+            <Text
+              className="text-red-800"
+              style={{ fontFamily: 'Poppins-Medium', fontSize: 13 }}
+            >
+              Time Expired
+            </Text>
+            <Text
+              className="text-red-600 mt-1"
+              style={{ fontFamily: 'Poppins-Regular', fontSize: 13 }}
+            >
+              This booking request has timed out
+            </Text>
+          </View>
+        </View>
+      </View>
+    );
+  }
 
   if (!timeLeft) return null;
 

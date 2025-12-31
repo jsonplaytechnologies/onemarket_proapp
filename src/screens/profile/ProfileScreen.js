@@ -1,35 +1,37 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../../context/AuthContext';
-import apiService from '../../services/api';
-import { API_ENDPOINTS } from '../../constants/api';
 import { COLORS } from '../../constants/colors';
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
-  const { user, logout } = useAuth();
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { user, logout, fetchUserProfile, isProfileStale, profileLastFetched } = useAuth();
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    fetchProfile();
-  }, []);
+  // Use user data from AuthContext as profile
+  const profile = user?.profile || user;
 
-  const fetchProfile = async () => {
-    try {
-      const response = await apiService.get(API_ENDPOINTS.PRO_PROFILE);
-      if (response.success) {
-        setProfile(response.data);
+  // Only fetch profile if stale when screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      if (isProfileStale()) {
+        setLoading(true);
+        fetchUserProfile(true).finally(() => setLoading(false));
       }
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-    } finally {
+    }, [isProfileStale, fetchUserProfile])
+  );
+
+  // Update loading state when profile is fetched
+  useEffect(() => {
+    if (profileLastFetched && loading) {
       setLoading(false);
     }
-  };
+  }, [profileLastFetched]);
+
+  const isOnline = profile?.is_online || false;
 
   const firstName = profile?.first_name || user?.profile?.first_name || '';
   const lastName = profile?.last_name || user?.profile?.last_name || '';
@@ -37,13 +39,18 @@ const ProfileScreen = () => {
   const phone = user?.phone || '';
   const rating = parseFloat(profile?.average_rating) || 0;
   const totalReviews = profile?.total_reviews || 0;
-  const isOnline = profile?.is_online || false;
 
   const menuItems = [
     {
+      id: 'schedule',
+      icon: 'calendar-outline',
+      label: 'My Schedule',
+      onPress: () => navigation.navigate('MySchedule'),
+    },
+    {
       id: 'availability',
       icon: 'time-outline',
-      label: 'Availability Schedule',
+      label: 'Availability Settings',
       onPress: () => navigation.navigate('Availability'),
     },
     {
@@ -90,7 +97,8 @@ const ProfileScreen = () => {
     },
   ];
 
-  if (loading) {
+  // Show loading only on initial load when no user data exists
+  if (!user && loading) {
     return (
       <View className="flex-1 bg-white items-center justify-center">
         <ActivityIndicator size="large" color={COLORS.primary} />

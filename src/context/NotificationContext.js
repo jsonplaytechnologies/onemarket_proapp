@@ -3,12 +3,22 @@
  * Global notification state, unread count, and toast management
  */
 
-import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { Vibration } from 'react-native';
 import { useSocketContext } from './SocketContext';
 import { useAuth } from './AuthContext';
 import apiService from '../services/api';
 import { API_ENDPOINTS } from '../constants/api';
+import cacheManager, { CACHE_KEYS, CACHE_TYPES } from '../utils/cacheManager';
+
+// Debounce utility
+const debounce = (func, wait) => {
+  let timeout;
+  return (...args) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(this, args), wait);
+  };
+};
 
 // Try to import expo-av, fallback if not available
 let Audio = null;
@@ -61,8 +71,8 @@ export const NotificationProvider = ({ children }) => {
     };
   }, []);
 
-  // Play notification sound and vibrate
-  const playSound = async () => {
+  // Play notification sound and vibrate (memoized for useCallback dependencies)
+  const playSound = useCallback(async () => {
     // Vibrate phone
     Vibration.vibrate(200);
 
@@ -74,7 +84,7 @@ export const NotificationProvider = ({ children }) => {
     } catch (error) {
       console.log('Could not play sound:', error);
     }
-  };
+  }, []);
 
   // Show toast notification
   const showToast = useCallback((data) => {
@@ -89,54 +99,141 @@ export const NotificationProvider = ({ children }) => {
     toastTimeoutRef.current = setTimeout(() => {
       setToastData(null);
     }, 4000);
-  }, []);
+  }, [playSound]);
 
   // Hide toast
   const hideToast = useCallback(() => {
     setToastData(null);
   }, []);
 
-  // Trigger refresh for screens
+  // Debounced refresh trigger to prevent spam
+  const debouncedRefreshRef = useRef(null);
+
+  // Initialize debounced function
+  useEffect(() => {
+    debouncedRefreshRef.current = debounce(() => {
+      setRefreshTrigger(prev => prev + 1);
+    }, 1000); // 1 second debounce
+  }, []);
+
+  // Trigger refresh for screens (debounced to prevent spam)
   const triggerRefresh = useCallback(() => {
+    if (debouncedRefreshRef.current) {
+      debouncedRefreshRef.current();
+    }
+  }, []);
+
+  // Immediate refresh (bypasses debounce for critical updates)
+  const triggerImmediateRefresh = useCallback(() => {
     setRefreshTrigger(prev => prev + 1);
   }, []);
 
-  // Fetch notifications from API
-  const fetchNotifications = useCallback(async () => {
+  // Fetch notifications from API with caching
+  const fetchNotifications = useCallback(async (forceRefresh = false) => {
     try {
-      const response = await apiService.get(API_ENDPOINTS.NOTIFICATIONS);
+      // Check cache first
+      if (!forceRefresh && !cacheManager.isStale(CACHE_KEYS.NOTIFICATIONS, CACHE_TYPES.NOTIFICATIONS)) {
+        const cached = cacheManager.get(CACHE_KEYS.NOTIFICATIONS, CACHE_TYPES.NOTIFICATIONS);
+        if (cached) {
+          setNotifications(cached);
+          return;
+        }
+      }
+
+      const response = await cacheManager.deduplicatedFetch(
+        CACHE_KEYS.NOTIFICATIONS,
+        () => apiService.get(API_ENDPOINTS.NOTIFICATIONS)
+      );
+
       if (response.success) {
         const notifs = response.data?.notifications || response.data || [];
         setNotifications(notifs);
+        cacheManager.set(CACHE_KEYS.NOTIFICATIONS, notifs);
       }
     } catch (error) {
       console.error('Error fetching notifications:', error);
     }
   }, []);
 
-  // Fetch unread count
-  const fetchUnreadCount = useCallback(async () => {
+  // Combined fetch for all unread counts (reduces 2 API calls to 1)
+  // Falls back to separate calls if combined endpoint not available
+  const fetchAllUnreadCounts = useCallback(async (forceRefresh = false) => {
     try {
-      const response = await apiService.get(API_ENDPOINTS.NOTIFICATIONS_UNREAD_COUNT);
-      if (response.success) {
-        // API returns { unreadCount: number }
-        setUnreadCount(response.data?.unreadCount ?? 0);
+      // Check cache first
+      if (!forceRefresh) {
+        const cachedNotifCount = cacheManager.get(CACHE_KEYS.UNREAD_COUNT, CACHE_TYPES.NOTIFICATIONS);
+        const cachedChatsCount = cacheManager.get(CACHE_KEYS.UNREAD_CHATS_COUNT, CACHE_TYPES.NOTIFICATIONS);
+
+        if (cachedNotifCount !== null && cachedChatsCount !== null) {
+          setUnreadCount(cachedNotifCount);
+          setUnreadChatsCount(cachedChatsCount);
+          return;
+        }
+      }
+
+      // Try combined endpoint first (if backend supports it)
+      try {
+        const statusResponse = await apiService.get(API_ENDPOINTS.NOTIFICATIONS_STATUS);
+        if (statusResponse.success) {
+          const unread = statusResponse.data?.unreadCount ?? 0;
+          const chatsUnread = statusResponse.data?.unreadChatsCount ?? 0;
+          setUnreadCount(unread);
+          setUnreadChatsCount(chatsUnread);
+          cacheManager.set(CACHE_KEYS.UNREAD_COUNT, unread);
+          cacheManager.set(CACHE_KEYS.UNREAD_CHATS_COUNT, chatsUnread);
+          return;
+        }
+      } catch {
+        // Combined endpoint not available, fall back to separate calls
+      }
+
+      // Fallback: fetch both in parallel
+      const [unreadRes, chatsRes] = await Promise.all([
+        cacheManager.deduplicatedFetch(
+          CACHE_KEYS.UNREAD_COUNT,
+          () => apiService.get(API_ENDPOINTS.NOTIFICATIONS_UNREAD_COUNT)
+        ),
+        cacheManager.deduplicatedFetch(
+          CACHE_KEYS.UNREAD_CHATS_COUNT,
+          () => apiService.get(API_ENDPOINTS.CONVERSATIONS)
+        ),
+      ]);
+
+      if (unreadRes.success) {
+        const count = unreadRes.data?.unreadCount ?? 0;
+        setUnreadCount(count);
+        cacheManager.set(CACHE_KEYS.UNREAD_COUNT, count);
+      }
+
+      if (chatsRes.success) {
+        const count = chatsRes.data?.totalUnread ?? 0;
+        setUnreadChatsCount(count);
+        cacheManager.set(CACHE_KEYS.UNREAD_CHATS_COUNT, count);
       }
     } catch (error) {
-      console.error('Error fetching unread count:', error);
+      console.error('Error fetching unread counts:', error);
     }
   }, []);
 
-  // Fetch unread chats count
+  // Legacy methods for backward compatibility
+  const fetchUnreadCount = useCallback(async () => {
+    await fetchAllUnreadCounts();
+  }, [fetchAllUnreadCounts]);
+
   const fetchUnreadChatsCount = useCallback(async () => {
+    await fetchAllUnreadCounts();
+  }, [fetchAllUnreadCounts]);
+
+  // Mark single notification as read
+  const markAsRead = useCallback(async (notificationId) => {
     try {
-      const response = await apiService.get(API_ENDPOINTS.CONVERSATIONS);
-      if (response.success) {
-        // API returns { conversations: [...], totalUnread: number }
-        setUnreadChatsCount(response.data?.totalUnread ?? 0);
-      }
+      await apiService.patch(API_ENDPOINTS.NOTIFICATION_READ(notificationId));
+      setNotifications(prev => prev.map(n =>
+        n.id === notificationId ? { ...n, is_read: true, isRead: true } : n
+      ));
+      setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (error) {
-      console.error('Error fetching unread chats count:', error);
+      console.error('Error marking notification as read:', error);
     }
   }, []);
 
@@ -145,7 +242,7 @@ export const NotificationProvider = ({ children }) => {
     try {
       await apiService.patch(API_ENDPOINTS.NOTIFICATIONS_READ_ALL);
       setUnreadCount(0);
-      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+      setNotifications(prev => prev.map(n => ({ ...n, is_read: true, isRead: true })));
     } catch (error) {
       console.error('Error marking notifications as read:', error);
     }
@@ -154,14 +251,18 @@ export const NotificationProvider = ({ children }) => {
   // Initial fetch on auth (only if account is approved)
   useEffect(() => {
     if (isAuthenticated && user?.approval_status === 'approved') {
-      fetchUnreadCount();
-      fetchUnreadChatsCount();
+      // Single call to fetch all unread counts
+      fetchAllUnreadCounts();
     } else {
       setNotifications([]);
       setUnreadCount(0);
       setUnreadChatsCount(0);
+      // Clear cache on logout
+      cacheManager.invalidate(CACHE_KEYS.NOTIFICATIONS);
+      cacheManager.invalidate(CACHE_KEYS.UNREAD_COUNT);
+      cacheManager.invalidate(CACHE_KEYS.UNREAD_CHATS_COUNT);
     }
-  }, [isAuthenticated, user?.approval_status, fetchUnreadCount, fetchUnreadChatsCount]);
+  }, [isAuthenticated, user?.approval_status, fetchAllUnreadCounts]);
 
   // Socket event handlers - defined with useCallback for stable references
   // NOTE: This context handles TOAST NOTIFICATIONS only. State updates are
@@ -366,10 +467,13 @@ export const NotificationProvider = ({ children }) => {
     fetchNotifications,
     fetchUnreadCount,
     fetchUnreadChatsCount,
+    fetchAllUnreadCounts,
+    markAsRead,
     markAllAsRead,
     showToast,
     hideToast,
     triggerRefresh,
+    triggerImmediateRefresh,
   };
 
   return (
