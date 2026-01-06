@@ -12,15 +12,23 @@ import { Ionicons } from '@expo/vector-icons';
 import apiService from '../../services/api';
 import { API_ENDPOINTS } from '../../constants/api';
 import { COLORS } from '../../constants/colors';
+import { TierBadge } from '../../components/incentives';
+import { useIncentive } from '../../context/IncentiveContext';
+import { formatBonusRate } from '../../services/incentiveService';
 
 
 const EarningsScreen = ({ navigation }) => {
+  const { tierStatus, fetchTierStatus } = useIncentive();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [earnings, setEarnings] = useState(null);
 
+  const currentTier = tierStatus?.tier || 'starter';
+  const bonusRate = tierStatus?.bonusRate || 0;
+
   useEffect(() => {
     fetchEarnings();
+    fetchTierStatus();
   }, []);
 
   const fetchEarnings = async () => {
@@ -100,12 +108,20 @@ const EarningsScreen = ({ navigation }) => {
 
           {/* Balance Card */}
           <View className="bg-primary rounded-2xl p-5">
-            <Text
-              className="text-white/70"
-              style={{ fontFamily: 'Poppins-Regular', fontSize: 13 }}
-            >
-              Available Balance
-            </Text>
+            <View className="flex-row items-center justify-between mb-2">
+              <Text
+                className="text-white/70"
+                style={{ fontFamily: 'Poppins-Regular', fontSize: 13 }}
+              >
+                Available Balance
+              </Text>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('Tier')}
+                activeOpacity={0.7}
+              >
+                <TierBadge tier={currentTier} size="small" showBonus />
+              </TouchableOpacity>
+            </View>
             <Text
               className="text-white mt-1"
               style={{ fontFamily: 'Poppins-Bold', fontSize: 36 }}
@@ -145,6 +161,36 @@ const EarningsScreen = ({ navigation }) => {
             </View>
           </View>
         </View>
+
+        {/* Tier Bonus Info */}
+        {bonusRate > 0 && (
+          <View className="px-6 mb-4">
+            <TouchableOpacity
+              className="bg-green-50 rounded-2xl p-4 flex-row items-center"
+              onPress={() => navigation.navigate('Tier')}
+              activeOpacity={0.7}
+            >
+              <View className="w-11 h-11 bg-green-100 rounded-xl items-center justify-center mr-3">
+                <Ionicons name="trending-up" size={22} color="#16A34A" />
+              </View>
+              <View className="flex-1">
+                <Text
+                  className="text-green-800"
+                  style={{ fontFamily: 'Poppins-SemiBold', fontSize: 14 }}
+                >
+                  +{formatBonusRate(bonusRate)} Tier Bonus Active
+                </Text>
+                <Text
+                  className="text-green-600"
+                  style={{ fontFamily: 'Poppins-Regular', fontSize: 12 }}
+                >
+                  You earn extra on every job
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#16A34A" />
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Withdraw Button */}
         <View className="px-6 mb-6">

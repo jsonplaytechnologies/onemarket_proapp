@@ -14,6 +14,7 @@ import { AuthProvider } from './src/context/AuthContext';
 import { SocketProvider } from './src/context/SocketContext';
 import { NotificationProvider } from './src/context/NotificationContext';
 import { BookingProvider } from './src/context/BookingContext';
+import { IncentiveProvider } from './src/context/IncentiveContext';
 import AppNavigator from './src/navigation/AppNavigator';
 
 // Keep the splash screen visible while we fetch resources
@@ -43,8 +44,10 @@ export default function App() {
         <SocketProvider>
           <NotificationProvider>
             <BookingProvider>
-              <AppNavigator />
-              <StatusBar style="auto" />
+              <IncentiveProvider>
+                <AppNavigator />
+                <StatusBar style="auto" />
+              </IncentiveProvider>
             </BookingProvider>
           </NotificationProvider>
         </SocketProvider>

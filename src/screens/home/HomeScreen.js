@@ -19,10 +19,19 @@ import { COLORS } from '../../constants/colors';
 import { BookingCard, RankingStatsCard } from '../../components/bookings';
 import Logo from '../../components/common/Logo';
 import cacheManager, { CACHE_KEYS, CACHE_TYPES } from '../../utils/cacheManager';
+import { TierBadge, ReferralCodeCard } from '../../components/incentives';
+import { useIncentive } from '../../context/IncentiveContext';
 
 const HomeScreen = ({ navigation }) => {
   const { user, updateUser, fetchUserProfile, isProfileStale } = useAuth();
   const { unreadCount, refreshTrigger } = useNotifications();
+  const {
+    tierStatus,
+    referralCode,
+    referralStats,
+    fetchDashboard,
+    shareReferralCode,
+  } = useIncentive();
 
   const [earnings, setEarnings] = useState(null);
   const [recentBookings, setRecentBookings] = useState([]);
@@ -116,7 +125,9 @@ const HomeScreen = ({ navigation }) => {
       if (isProfileStale()) {
         fetchUserProfile();
       }
-    }, [fetchDataIfStale, isProfileStale, fetchUserProfile])
+      // Fetch incentive data
+      fetchDashboard();
+    }, [fetchDataIfStale, isProfileStale, fetchUserProfile, fetchDashboard])
   );
 
   useEffect(() => {
@@ -235,12 +246,23 @@ const HomeScreen = ({ navigation }) => {
             >
               Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'},
             </Text>
-            <Text
-              className="text-gray-900"
-              style={{ fontFamily: 'Poppins-Bold', fontSize: 26 }}
-            >
-              {firstName}
-            </Text>
+            <View className="flex-row items-center">
+              <Text
+                className="text-gray-900"
+                style={{ fontFamily: 'Poppins-Bold', fontSize: 26 }}
+              >
+                {firstName}
+              </Text>
+              {tierStatus?.tier && (
+                <View className="ml-2">
+                  <TierBadge
+                    tier={tierStatus.tier}
+                    size="small"
+                    showBonus
+                  />
+                </View>
+              )}
+            </View>
           </View>
 
           {/* Online Status Toggle */}
@@ -366,6 +388,24 @@ const HomeScreen = ({ navigation }) => {
             ))}
           </View>
         </View>
+
+        {/* Referral Quick Access */}
+        {referralCode?.code && (
+          <View className="px-6 mb-6">
+            <TouchableOpacity
+              onPress={() => navigation.navigate('IncentiveDashboard')}
+              activeOpacity={0.9}
+            >
+              <ReferralCodeCard
+                code={referralCode.code}
+                totalUses={referralCode.totalUses || referralStats?.stats?.totalReferrals || 0}
+                totalEarned={referralStats?.stats?.totalRewardsEarned || 0}
+                onShare={shareReferralCode}
+                compact
+              />
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Phase 2: Ranking Stats Card */}
         {rankingStats && (

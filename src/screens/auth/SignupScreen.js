@@ -7,6 +7,7 @@ import Input from '../../components/common/Input';
 import apiService, { ApiError } from '../../services/api';
 import { API_ENDPOINTS } from '../../constants/api';
 import { useAuth } from '../../context/AuthContext';
+import { validateReferralCode } from '../../services/incentiveService';
 
 const SignupScreen = ({ navigation, route }) => {
   const { phone } = route.params;
@@ -15,8 +16,48 @@ const SignupScreen = ({ navigation, route }) => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [bio, setBio] = useState('');
+  const [referralCode, setReferralCode] = useState('');
+  const [referralCodeValid, setReferralCodeValid] = useState(null);
+  const [referralCodeChecking, setReferralCodeChecking] = useState(false);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+
+  // Debounced referral code validation
+  const handleReferralCodeChange = async (code) => {
+    const upperCode = code.toUpperCase().trim();
+    setReferralCode(upperCode);
+    setReferralCodeValid(null);
+
+    if (errors.referralCode) {
+      setErrors({ ...errors, referralCode: '' });
+    }
+
+    if (upperCode.length === 0) {
+      return;
+    }
+
+    if (upperCode.length < 8) {
+      return;
+    }
+
+    // Validate the referral code
+    setReferralCodeChecking(true);
+    try {
+      const response = await validateReferralCode(upperCode);
+      // Backend returns { isValid: true/false }
+      if (response.success && response.data?.isValid) {
+        setReferralCodeValid(true);
+      } else {
+        setReferralCodeValid(false);
+        setErrors({ ...errors, referralCode: response.data?.reason || 'Invalid referral code' });
+      }
+    } catch (error) {
+      setReferralCodeValid(false);
+      setErrors({ ...errors, referralCode: 'Invalid referral code' });
+    } finally {
+      setReferralCodeChecking(false);
+    }
+  };
 
   const validateForm = () => {
     const newErrors = {};
@@ -42,7 +83,7 @@ const SignupScreen = ({ navigation, route }) => {
 
     setLoading(true);
     try {
-      const response = await apiService.post(API_ENDPOINTS.SIGNUP, {
+      const signupData = {
         phone,
         role: 'pro', // Important: Sign up as Pro
         profile: {
@@ -50,7 +91,14 @@ const SignupScreen = ({ navigation, route }) => {
           lastName: lastName.trim(),
           bio: bio.trim(),
         },
-      });
+      };
+
+      // Include referral code if valid
+      if (referralCode && referralCodeValid) {
+        signupData.referral_code = referralCode;
+      }
+
+      const response = await apiService.post(API_ENDPOINTS.SIGNUP, signupData);
 
       if (response.success) {
         // Login and let AppNavigator handle navigation automatically
@@ -177,7 +225,7 @@ const SignupScreen = ({ navigation, route }) => {
               />
             </View>
 
-            <View className="mb-6">
+            <View className="mb-4">
               <Text
                 className="text-sm font-medium text-gray-700 mb-2"
                 style={{ fontFamily: 'Poppins-Medium' }}
@@ -197,6 +245,44 @@ const SignupScreen = ({ navigation, route }) => {
                 numberOfLines={4}
                 error={errors.bio}
               />
+            </View>
+
+            {/* Referral Code */}
+            <View className="mb-6">
+              <Text
+                className="text-sm font-medium text-gray-700 mb-2"
+                style={{ fontFamily: 'Poppins-Medium' }}
+              >
+                Referral Code (Optional)
+              </Text>
+              <Input
+                placeholder="Enter code if referred by another provider"
+                value={referralCode}
+                onChangeText={handleReferralCodeChange}
+                icon="gift-outline"
+                autoCapitalize="characters"
+                maxLength={8}
+                error={errors.referralCode}
+              />
+              {referralCodeChecking && (
+                <Text
+                  className="text-gray-400 mt-1"
+                  style={{ fontFamily: 'Poppins-Regular', fontSize: 12 }}
+                >
+                  Checking code...
+                </Text>
+              )}
+              {referralCodeValid === true && (
+                <View className="flex-row items-center mt-1">
+                  <Ionicons name="checkmark-circle" size={16} color="#16A34A" />
+                  <Text
+                    className="text-green-600 ml-1"
+                    style={{ fontFamily: 'Poppins-Regular', fontSize: 12 }}
+                  >
+                    Valid code! You'll receive a bonus when qualified.
+                  </Text>
+                </View>
+              )}
             </View>
 
             {/* Info Card */}

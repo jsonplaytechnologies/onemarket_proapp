@@ -77,4 +77,17 @@ export const API_ENDPOINTS = {
 
   // Phase 2 - Provider Ranking & Stats
   MY_RANKING: '/api/pros/me/ranking',
+
+  // Incentive & Referral System
+  REFERRAL_MY_CODE: '/api/referrals/my-code',
+  REFERRAL_STATS: '/api/referrals/stats',
+  REFERRAL_LIST: '/api/referrals/list',
+  REFERRAL_VALIDATE: '/api/referrals/validate',
+
+  TIER_MY_TIER: '/api/tiers/my-tier',
+  TIER_BENEFITS: '/api/tiers/benefits',
+  TIER_HISTORY: '/api/tiers/history',
+
+  INCENTIVE_SIGNUP_STATUS: '/api/incentives/signup-status',
+  INCENTIVE_DASHBOARD: '/api/incentives/dashboard',
 };

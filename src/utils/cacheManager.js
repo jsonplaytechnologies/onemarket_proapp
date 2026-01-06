@@ -19,6 +19,10 @@ class CacheManager {
       services: 10 * 60 * 1000,     // 10 minutes for services
       zones: 30 * 60 * 1000,        // 30 minutes for zones
       default: 60 * 1000,           // 1 minute default
+      // Incentive system TTLs
+      incentive: 30 * 1000,         // 30 seconds for incentive data
+      tier: 30 * 1000,              // 30 seconds for tier status
+      tierBenefits: 30 * 1000,      // 30 seconds for tier benefits
     };
   }
 
@@ -187,6 +191,13 @@ export const CACHE_KEYS = {
   REVIEWS: 'reviews',
   TRANSACTIONS: 'transactions',
   WITHDRAWALS: 'withdrawals',
+  // Incentive system cache keys
+  REFERRAL_CODE: 'referral:code',
+  REFERRAL_STATS: 'referral:stats',
+  TIER_STATUS: 'tier:status',
+  TIER_BENEFITS: 'tier:benefits',
+  SIGNUP_STATUS: 'signup:status',
+  INCENTIVE_DASHBOARD: 'incentive:dashboard',
 };
 
 // Cache types for TTL
@@ -200,6 +211,10 @@ export const CACHE_TYPES = {
   SERVICES: 'services',
   ZONES: 'zones',
   DEFAULT: 'default',
+  // Incentive system cache types
+  INCENTIVE: 'incentive',
+  TIER: 'tier',
+  TIER_BENEFITS: 'tierBenefits',
 };
 
 export default cacheManager;

@@ -42,6 +42,19 @@ const ProfileScreen = () => {
 
   const menuItems = [
     {
+      id: 'incentives',
+      icon: 'gift-outline',
+      label: 'Incentives & Rewards',
+      onPress: () => navigation.navigate('IncentiveDashboard'),
+      highlight: true,
+    },
+    {
+      id: 'referrals',
+      icon: 'share-social-outline',
+      label: 'Refer a Provider',
+      onPress: () => navigation.navigate('Referrals'),
+    },
+    {
       id: 'schedule',
       icon: 'calendar-outline',
       label: 'My Schedule',
@@ -236,20 +249,24 @@ const ProfileScreen = () => {
           {menuItems.map((item, index) => (
             <TouchableOpacity
               key={item.id}
-              className="flex-row items-center py-4 border-b border-gray-100"
+              className={`flex-row items-center py-4 border-b border-gray-100 ${
+                item.highlight ? 'bg-blue-50 -mx-4 px-4 rounded-xl border-0 mb-2' : ''
+              }`}
               activeOpacity={0.7}
               onPress={item.onPress}
             >
-              <View className="w-10 h-10 bg-gray-50 rounded-xl items-center justify-center mr-4">
+              <View className={`w-10 h-10 rounded-xl items-center justify-center mr-4 ${
+                item.highlight ? 'bg-blue-100' : 'bg-gray-50'
+              }`}>
                 <Ionicons name={item.icon} size={20} color={COLORS.primary} />
               </View>
               <Text
-                className="flex-1 text-gray-800"
-                style={{ fontFamily: 'Poppins-Medium', fontSize: 15 }}
+                className={`flex-1 ${item.highlight ? 'text-primary' : 'text-gray-800'}`}
+                style={{ fontFamily: item.highlight ? 'Poppins-SemiBold' : 'Poppins-Medium', fontSize: 15 }}
               >
                 {item.label}
               </Text>
-              <Ionicons name="chevron-forward" size={20} color="#D1D5DB" />
+              <Ionicons name="chevron-forward" size={20} color={item.highlight ? COLORS.primary : '#D1D5DB'} />
             </TouchableOpacity>
           ))}
         </View>

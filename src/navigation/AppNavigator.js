@@ -51,6 +51,13 @@ import ReviewsScreen from '../screens/reviews/ReviewsScreen';
 // Schedule Screen
 import MyScheduleScreen from '../screens/schedule/MyScheduleScreen';
 
+// Incentive Screens
+import {
+  IncentiveDashboardScreen,
+  ReferralsScreen,
+  TierScreen,
+} from '../screens/incentives';
+
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
@@ -156,6 +163,9 @@ const MainStack = () => {
       <Stack.Screen name="Availability" component={AvailabilityScreen} />
       <Stack.Screen name="Reviews" component={ReviewsScreen} />
       <Stack.Screen name="MySchedule" component={MyScheduleScreen} />
+      <Stack.Screen name="IncentiveDashboard" component={IncentiveDashboardScreen} />
+      <Stack.Screen name="Referrals" component={ReferralsScreen} />
+      <Stack.Screen name="Tier" component={TierScreen} />
     </Stack.Navigator>
   );
 };
