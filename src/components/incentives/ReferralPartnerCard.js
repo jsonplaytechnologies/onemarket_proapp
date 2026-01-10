@@ -9,13 +9,18 @@ const ReferralPartnerCard = ({
   const {
     referredUser,
     status,
-    jobsCompleted = 0,
-    jobsRequired = 5,
-    averageRating = 0,
-    ratingRequired = 4.0,
+    jobsCompleted: rawJobsCompleted = 0,
+    jobsRequired: rawJobsRequired = 5,
+    averageRating: rawAverageRating = 0,
+    ratingRequired: rawRatingRequired = 4.0,
     referrerRewardAmount = 0,
     createdAt,
   } = referral || {};
+
+  const jobsCompleted = Number(rawJobsCompleted) || 0;
+  const jobsRequired = Number(rawJobsRequired) || 5;
+  const averageRating = Number(rawAverageRating) || 0;
+  const ratingRequired = Number(rawRatingRequired) || 4.0;
 
   const firstName = referredUser?.profile?.firstName || referredUser?.firstName || '';
   const lastName = referredUser?.profile?.lastName || referredUser?.lastName || '';

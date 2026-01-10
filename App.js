@@ -1,5 +1,6 @@
 import './global.css';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { View, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
@@ -15,10 +16,58 @@ import { SocketProvider } from './src/context/SocketContext';
 import { NotificationProvider } from './src/context/NotificationContext';
 import { BookingProvider } from './src/context/BookingContext';
 import { IncentiveProvider } from './src/context/IncentiveContext';
+import { LanguageProvider, useLanguage } from './src/context/LanguageContext';
 import AppNavigator from './src/navigation/AppNavigator';
+import LanguageSelector from './src/components/common/LanguageSelector';
+import { COLORS } from './src/constants/colors';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
+
+// Inner app component that uses language context
+const AppContent = () => {
+  const { isFirstLaunch, isLoading, isI18nReady, completeFirstLaunch } = useLanguage();
+  const [showLanguageSelector, setShowLanguageSelector] = useState(false);
+
+  useEffect(() => {
+    if (!isLoading && isFirstLaunch) {
+      setShowLanguageSelector(true);
+    }
+  }, [isLoading, isFirstLaunch]);
+
+  const handleLanguageSelected = (language) => {
+    setShowLanguageSelector(false);
+  };
+
+  if (isLoading || !isI18nReady) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFFFFF' }}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
+  }
+
+  return (
+    <>
+      <AuthProvider>
+        <SocketProvider>
+          <NotificationProvider>
+            <BookingProvider>
+              <IncentiveProvider>
+                <AppNavigator />
+                <StatusBar style="auto" />
+              </IncentiveProvider>
+            </BookingProvider>
+          </NotificationProvider>
+        </SocketProvider>
+      </AuthProvider>
+      <LanguageSelector
+        visible={showLanguageSelector}
+        onComplete={handleLanguageSelected}
+      />
+    </>
+  );
+};
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -40,18 +89,9 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <AuthProvider>
-        <SocketProvider>
-          <NotificationProvider>
-            <BookingProvider>
-              <IncentiveProvider>
-                <AppNavigator />
-                <StatusBar style="auto" />
-              </IncentiveProvider>
-            </BookingProvider>
-          </NotificationProvider>
-        </SocketProvider>
-      </AuthProvider>
+      <LanguageProvider>
+        <AppContent />
+      </LanguageProvider>
     </SafeAreaProvider>
   );
 }

@@ -14,8 +14,14 @@ const TierProgressCard = ({
   const currentTierInfo = getTierInfo(currentTier);
   const nextTierInfo = nextTier ? getTierInfo(nextTier) : null;
 
-  const jobsProgress = progress.jobs || { current: 0, required: 0 };
-  const ratingProgress = progress.rating || { current: 0, required: 0 };
+  const jobsProgress = {
+    current: Number(progress.jobs?.current) || 0,
+    required: Number(progress.jobs?.required) || 0,
+  };
+  const ratingProgress = {
+    current: Number(progress.rating?.current) || 0,
+    required: Number(progress.rating?.required) || 0,
+  };
 
   const jobsPercent = jobsProgress.required > 0
     ? Math.min((jobsProgress.current / jobsProgress.required) * 100, 100)

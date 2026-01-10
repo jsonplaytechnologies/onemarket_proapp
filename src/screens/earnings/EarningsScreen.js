@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import apiService from '../../services/api';
 import { API_ENDPOINTS } from '../../constants/api';
 import { COLORS } from '../../constants/colors';
@@ -18,6 +19,7 @@ import { formatBonusRate } from '../../services/incentiveService';
 
 
 const EarningsScreen = ({ navigation }) => {
+  const { t } = useTranslation();
   const { tierStatus, fetchTierStatus } = useIncentive();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -102,7 +104,7 @@ const EarningsScreen = ({ navigation }) => {
               className="text-gray-900"
               style={{ fontFamily: 'Poppins-Bold', fontSize: 24 }}
             >
-              Earnings
+              {t('earnings.title')}
             </Text>
           </View>
 
@@ -113,7 +115,7 @@ const EarningsScreen = ({ navigation }) => {
                 className="text-white/70"
                 style={{ fontFamily: 'Poppins-Regular', fontSize: 13 }}
               >
-                Available Balance
+                {t('earnings.availableBalance')}
               </Text>
               <TouchableOpacity
                 onPress={() => navigation.navigate('Tier')}
@@ -135,7 +137,7 @@ const EarningsScreen = ({ navigation }) => {
                   className="text-white/60"
                   style={{ fontFamily: 'Poppins-Regular', fontSize: 11 }}
                 >
-                  Total Earned
+                  {t('earnings.totalEarned')}
                 </Text>
                 <Text
                   className="text-white"
@@ -149,7 +151,7 @@ const EarningsScreen = ({ navigation }) => {
                   className="text-white/60"
                   style={{ fontFamily: 'Poppins-Regular', fontSize: 11 }}
                 >
-                  Withdrawn
+                  {t('earnings.withdrawn')}
                 </Text>
                 <Text
                   className="text-white"
@@ -178,13 +180,13 @@ const EarningsScreen = ({ navigation }) => {
                   className="text-green-800"
                   style={{ fontFamily: 'Poppins-SemiBold', fontSize: 14 }}
                 >
-                  +{formatBonusRate(bonusRate)} Tier Bonus Active
+                  {t('earnings.tierBonusActive', { rate: formatBonusRate(bonusRate) })}
                 </Text>
                 <Text
                   className="text-green-600"
                   style={{ fontFamily: 'Poppins-Regular', fontSize: 12 }}
                 >
-                  You earn extra on every job
+                  {t('earnings.earnExtraOnEveryJob')}
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color="#16A34A" />
@@ -208,13 +210,13 @@ const EarningsScreen = ({ navigation }) => {
                   className="text-gray-900"
                   style={{ fontFamily: 'Poppins-Medium', fontSize: 15 }}
                 >
-                  Withdraw
+                  {t('earnings.withdraw')}
                 </Text>
                 <Text
                   className="text-gray-400"
                   style={{ fontFamily: 'Poppins-Regular', fontSize: 12 }}
                 >
-                  Mobile money or bank
+                  {t('earnings.mobileMoneyOrBank')}
                 </Text>
               </View>
             </View>
@@ -229,7 +231,7 @@ const EarningsScreen = ({ navigation }) => {
               className="text-gray-400 mb-4"
               style={{ fontFamily: 'Poppins-Medium', fontSize: 11, letterSpacing: 1 }}
             >
-              SUMMARY
+              {t('earnings.summary')}
             </Text>
 
             <View className="flex-row justify-between mb-4">
@@ -237,7 +239,7 @@ const EarningsScreen = ({ navigation }) => {
                 className="text-gray-500"
                 style={{ fontFamily: 'Poppins-Regular', fontSize: 14 }}
               >
-                Total Jobs
+                {t('earnings.totalJobs')}
               </Text>
               <Text
                 className="text-gray-900"
@@ -252,7 +254,7 @@ const EarningsScreen = ({ navigation }) => {
                 className="text-gray-500"
                 style={{ fontFamily: 'Poppins-Regular', fontSize: 14 }}
               >
-                Gross Earnings
+                {t('earnings.grossEarnings')}
               </Text>
               <Text
                 className="text-gray-900"
@@ -267,7 +269,7 @@ const EarningsScreen = ({ navigation }) => {
                 className="text-gray-500"
                 style={{ fontFamily: 'Poppins-Regular', fontSize: 14 }}
               >
-                Commission
+                {t('earnings.commission')}
               </Text>
               <Text
                 className="text-red-500"
@@ -282,7 +284,7 @@ const EarningsScreen = ({ navigation }) => {
                 className="text-gray-900"
                 style={{ fontFamily: 'Poppins-SemiBold', fontSize: 15 }}
               >
-                Net Earnings
+                {t('earnings.netEarnings')}
               </Text>
               <Text
                 className="text-emerald-600"
@@ -302,7 +304,7 @@ const EarningsScreen = ({ navigation }) => {
                 className="text-gray-400 mb-4"
                 style={{ fontFamily: 'Poppins-Medium', fontSize: 11, letterSpacing: 1 }}
               >
-                BY SERVICE
+                {t('earnings.byService')}
               </Text>
 
               {earnings.breakdown.byService.map((service, index) => (
@@ -325,7 +327,7 @@ const EarningsScreen = ({ navigation }) => {
                       className="text-gray-400"
                       style={{ fontFamily: 'Poppins-Regular', fontSize: 12 }}
                     >
-                      {service.jobCount} job{service.jobCount !== 1 ? 's' : ''}
+                      {service.jobCount} {service.jobCount !== 1 ? t('earnings.jobs') : t('earnings.job')}
                     </Text>
                   </View>
                   <Text
@@ -355,7 +357,7 @@ const EarningsScreen = ({ navigation }) => {
                 className="text-gray-900"
                 style={{ fontFamily: 'Poppins-Medium', fontSize: 15 }}
               >
-                Transaction History
+                {t('earnings.transactionHistory')}
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color="#D1D5DB" />

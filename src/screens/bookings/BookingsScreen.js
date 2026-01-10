@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import apiService from '../../services/api';
 import { API_ENDPOINTS } from '../../constants/api';
 import { COLORS } from '../../constants/colors';
@@ -17,13 +18,6 @@ import { BookingCard } from '../../components/bookings';
 import { useNotifications } from '../../context/NotificationContext';
 import { useSocketContext } from '../../context/SocketContext';
 import cacheManager, { CACHE_KEYS, CACHE_TYPES } from '../../utils/cacheManager';
-
-const STATUS_FILTERS = [
-  { key: 'all', label: 'All' },
-  { key: 'action_required', label: 'Action' },
-  { key: 'active', label: 'Active' },
-  { key: 'completed', label: 'Done' },
-];
 
 // Statuses requiring immediate provider action
 const ACTION_REQUIRED_STATUSES = [
@@ -41,6 +35,7 @@ const ACTIVE_STATUSES = [
 ];
 
 const BookingsScreen = ({ navigation }) => {
+  const { t } = useTranslation();
   const [bookings, setBookings] = useState([]);
   const [filteredBookings, setFilteredBookings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -55,6 +50,13 @@ const BookingsScreen = ({ navigation }) => {
 
   // Track last refresh trigger to prevent duplicate fetches
   const lastRefreshTriggerRef = useRef(0);
+
+  const STATUS_FILTERS = [
+    { key: 'all', label: t('bookings.filters.all') },
+    { key: 'action_required', label: t('bookings.filters.action') },
+    { key: 'active', label: t('bookings.filters.active') },
+    { key: 'completed', label: t('bookings.filters.done') },
+  ];
 
   // Memoized fetch function for bookings
   const fetchBookings = useCallback(async (pageNum = 1, reset = false) => {
@@ -201,6 +203,19 @@ const BookingsScreen = ({ navigation }) => {
     }
   };
 
+  const getFilterLabel = (filterKey) => {
+    switch (filterKey) {
+      case 'action_required':
+        return t('bookings.filters.action').toLowerCase();
+      case 'active':
+        return t('bookings.filters.active').toLowerCase();
+      case 'completed':
+        return t('bookings.filters.done').toLowerCase();
+      default:
+        return '';
+    }
+  };
+
   const renderEmptyState = () => (
     <View className="flex-1 items-center justify-center px-6 py-20">
       <View className="w-20 h-20 bg-gray-100 rounded-3xl items-center justify-center mb-4">
@@ -210,13 +225,13 @@ const BookingsScreen = ({ navigation }) => {
         className="text-gray-900 mt-2 text-center"
         style={{ fontFamily: 'Poppins-SemiBold', fontSize: 18 }}
       >
-        {selectedFilter === 'all' ? 'No bookings yet' : `No ${selectedFilter} bookings`}
+        {selectedFilter === 'all' ? t('bookings.noBookings') : t('bookings.noFilteredBookings', { filter: getFilterLabel(selectedFilter) })}
       </Text>
       <Text
         className="text-gray-400 text-center mt-1"
         style={{ fontFamily: 'Poppins-Regular', fontSize: 14 }}
       >
-        New requests will appear here
+        {t('bookings.newRequestsAppear')}
       </Text>
     </View>
   );
@@ -239,7 +254,7 @@ const BookingsScreen = ({ navigation }) => {
             className="text-gray-900"
             style={{ fontFamily: 'Poppins-Bold', fontSize: 28 }}
           >
-            Bookings
+            {t('bookings.title')}
           </Text>
         </View>
         <View className="flex-1 items-center justify-center">
@@ -257,7 +272,7 @@ const BookingsScreen = ({ navigation }) => {
           className="text-gray-900"
           style={{ fontFamily: 'Poppins-Bold', fontSize: 28 }}
         >
-          Bookings
+          {t('bookings.title')}
         </Text>
 
         {/* Filter Pills */}

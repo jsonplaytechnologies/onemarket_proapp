@@ -3,13 +3,19 @@ import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator } fr
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
+import { LanguageChangeModal } from '../../components/common/LanguageSelector';
 import { COLORS } from '../../constants/colors';
 
 const ProfileScreen = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const { user, logout, fetchUserProfile, isProfileStale, profileLastFetched } = useAuth();
+  const { language } = useLanguage();
   const [loading, setLoading] = useState(false);
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
 
   // Use user data from AuthContext as profile
   const profile = user?.profile || user;
@@ -44,68 +50,75 @@ const ProfileScreen = () => {
     {
       id: 'incentives',
       icon: 'gift-outline',
-      label: 'Incentives & Rewards',
+      label: t('profile.menuItems.incentives'),
       onPress: () => navigation.navigate('IncentiveDashboard'),
       highlight: true,
     },
     {
       id: 'referrals',
       icon: 'share-social-outline',
-      label: 'Refer a Provider',
+      label: t('profile.menuItems.referrals'),
       onPress: () => navigation.navigate('Referrals'),
     },
     {
       id: 'schedule',
       icon: 'calendar-outline',
-      label: 'My Schedule',
+      label: t('profile.menuItems.schedule'),
       onPress: () => navigation.navigate('MySchedule'),
     },
     {
       id: 'availability',
       icon: 'time-outline',
-      label: 'Availability Settings',
+      label: t('profile.menuItems.availability'),
       onPress: () => navigation.navigate('Availability'),
     },
     {
       id: 'services',
       icon: 'construct-outline',
-      label: 'My Services',
+      label: t('profile.menuItems.services'),
       onPress: () => navigation.navigate('MyServices'),
     },
     {
       id: 'zones',
       icon: 'location-outline',
-      label: 'Coverage Zones',
+      label: t('profile.menuItems.zones'),
       onPress: () => navigation.navigate('MyZones'),
     },
     {
       id: 'earnings',
       icon: 'wallet-outline',
-      label: 'Earnings & Wallet',
+      label: t('profile.menuItems.earnings'),
       onPress: () => navigation.navigate('Earnings'),
     },
     {
       id: 'reviews',
       icon: 'star-outline',
-      label: 'Reviews',
+      label: t('profile.menuItems.reviews'),
       onPress: () => navigation.navigate('Reviews'),
     },
     {
       id: 'bookings',
       icon: 'calendar-outline',
-      label: 'Booking History',
+      label: t('profile.menuItems.bookings'),
       onPress: () => navigation.navigate('Bookings'),
     },
     {
       id: 'edit',
       icon: 'person-outline',
-      label: 'Edit Profile',
+      label: t('profile.menuItems.edit'),
       onPress: () => navigation.navigate('EditProfile'),
+    },
+    {
+      id: 'language',
+      icon: 'globe-outline',
+      label: t('profile.menuItems.language'),
+      onPress: () => setShowLanguageModal(true),
+      rightText: language === 'en' ? 'English' : 'Francais',
     },
     {
       id: 'help',
       icon: 'help-circle-outline',
-      label: 'Help & Support',
+      label: t('profile.menuItems.help'),
       onPress: () => {},
     },
   ];
@@ -128,7 +141,7 @@ const ProfileScreen = () => {
             className="text-gray-900"
             style={{ fontFamily: 'Poppins-Bold', fontSize: 28 }}
           >
-            Profile
+            {t('profile.title')}
           </Text>
         </View>
 
@@ -207,7 +220,7 @@ const ProfileScreen = () => {
                   className="text-gray-500"
                   style={{ fontFamily: 'Poppins-Regular', fontSize: 12 }}
                 >
-                  Jobs
+                  {t('profile.jobs')}
                 </Text>
               </View>
               <View className="w-px bg-gray-200" />
@@ -222,7 +235,7 @@ const ProfileScreen = () => {
                   className="text-gray-500"
                   style={{ fontFamily: 'Poppins-Regular', fontSize: 12 }}
                 >
-                  Services
+                  {t('profile.services')}
                 </Text>
               </View>
               <View className="w-px bg-gray-200" />
@@ -237,7 +250,7 @@ const ProfileScreen = () => {
                   className="text-gray-500"
                   style={{ fontFamily: 'Poppins-Regular', fontSize: 12 }}
                 >
-                  Zones
+                  {t('profile.zones')}
                 </Text>
               </View>
             </View>
@@ -266,6 +279,14 @@ const ProfileScreen = () => {
               >
                 {item.label}
               </Text>
+              {item.rightText && (
+                <Text
+                  className="text-gray-400 mr-2"
+                  style={{ fontFamily: 'Poppins-Regular', fontSize: 13 }}
+                >
+                  {item.rightText}
+                </Text>
+              )}
               <Ionicons name="chevron-forward" size={20} color={item.highlight ? COLORS.primary : '#D1D5DB'} />
             </TouchableOpacity>
           ))}
@@ -283,11 +304,17 @@ const ProfileScreen = () => {
               className="text-red-500 ml-2"
               style={{ fontFamily: 'Poppins-Medium', fontSize: 15 }}
             >
-              Logout
+              {t('common.logout')}
             </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Language Change Modal */}
+      <LanguageChangeModal
+        visible={showLanguageModal}
+        onClose={() => setShowLanguageModal(false)}
+      />
     </SafeAreaView>
   );
 };

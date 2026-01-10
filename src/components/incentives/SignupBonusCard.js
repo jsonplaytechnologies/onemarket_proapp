@@ -39,10 +39,10 @@ const SignupBonusCard = ({
 
   const daysRemaining = getDaysRemaining();
 
-  const jobsCompleted = progress.jobsCompleted || 0;
-  const jobsRequired = progress.jobsRequired || 5;
-  const averageRating = progress.averageRating || 0;
-  const ratingRequired = progress.ratingRequired || 4.0;
+  const jobsCompleted = Number(progress.jobsCompleted) || 0;
+  const jobsRequired = Number(progress.jobsRequired) || 5;
+  const averageRating = Number(progress.averageRating) || 0;
+  const ratingRequired = Number(progress.ratingRequired) || 4.0;
 
   const jobsPercent = Math.min((jobsCompleted / jobsRequired) * 100, 100);
   const ratingPercent = ratingRequired > 0

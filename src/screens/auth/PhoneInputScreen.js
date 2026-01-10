@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Alert, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import Button from '../../components/common/Button';
 import apiService, { ApiError } from '../../services/api';
 import { API_ENDPOINTS } from '../../constants/api';
@@ -12,13 +13,14 @@ const MAX_PHONE_LENGTH = 10;
 const GABON_COUNTRY = { code: '+241', name: 'Gabon', flag: '🇬🇦' };
 
 const PhoneInputScreen = ({ navigation }) => {
+  const { t } = useTranslation();
   const [phoneNumber, setPhoneNumber] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const validatePhoneNumber = () => {
     if (!phoneNumber || phoneNumber.length < MIN_PHONE_LENGTH) {
-      setError(`Enter ${MIN_PHONE_LENGTH}-${MAX_PHONE_LENGTH} digits`);
+      setError(t('auth.phoneInput.enterDigits', { min: MIN_PHONE_LENGTH, max: MAX_PHONE_LENGTH }));
       return false;
     }
     setError('');
@@ -33,6 +35,7 @@ const PhoneInputScreen = ({ navigation }) => {
       const response = await apiService.post(API_ENDPOINTS.SEND_OTP, {
         phone: phoneNumber,
         countryCode: GABON_COUNTRY.code,
+        expectedRole: 'pro', // This app expects 'pro' role
       });
 
       if (response.success) {
@@ -45,15 +48,25 @@ const PhoneInputScreen = ({ navigation }) => {
     } catch (error) {
       if (error.code === 'RATE_LIMITED') {
         Alert.alert(
-          'Please Wait',
-          `Too many requests. Try again in ${error.retryAfter} seconds.`
+          t('common.pleaseWait'),
+          t('common.tooManyRequests', { seconds: error.retryAfter })
+        );
+      } else if (error.message === 'WRONG_APP') {
+        // User exists with different role
+        const userRole = error.data?.userRole;
+        const appName = userRole === 'user' ? 'OneMarket' : 'OneMarket Business';
+        const roleLabel = userRole === 'user' ? t('auth.phoneInput.customer') : t('auth.phoneInput.business');
+        Alert.alert(
+          t('auth.phoneInput.wrongApp'),
+          t('auth.phoneInput.wrongAppMessage', { role: roleLabel, appName }),
+          [{ text: t('common.ok') }]
         );
       } else if (error.code === 'VALIDATION_ERROR') {
         // Show field-level validation errors
         const errorMsg = error.errors?.map(e => e.msg).join('\n') || error.message;
-        Alert.alert('Validation Error', errorMsg);
+        Alert.alert(t('common.validationError'), errorMsg);
       } else {
-        Alert.alert('Error', error.message || 'Failed to send OTP');
+        Alert.alert(t('common.error'), error.message || 'Failed to send OTP');
       }
     } finally {
       setLoading(false);
@@ -83,14 +96,14 @@ const PhoneInputScreen = ({ navigation }) => {
           className="text-gray-900 mb-2"
           style={{ fontFamily: 'Poppins-Bold', fontSize: 26 }}
         >
-          Enter your phone
+          {t('auth.phoneInput.title')}
         </Text>
 
         <Text
           className="text-gray-400"
           style={{ fontFamily: 'Poppins-Regular', fontSize: 15 }}
         >
-          We'll send you a verification code
+          {t('auth.phoneInput.subtitle')}
         </Text>
       </View>
 
@@ -119,7 +132,7 @@ const PhoneInputScreen = ({ navigation }) => {
               <TextInput
                 className="flex-1 text-gray-900"
                 style={{ fontFamily: 'Poppins-Regular', fontSize: 15 }}
-                placeholder="Phone number"
+                placeholder={t('auth.phoneInput.placeholder')}
                 placeholderTextColor="#9CA3AF"
                 value={phoneNumber}
                 onChangeText={handlePhoneChange}
@@ -147,7 +160,7 @@ const PhoneInputScreen = ({ navigation }) => {
         {/* Send OTP Button */}
         <View className="mt-8">
           <Button
-            title="Continue"
+            title={t('common.continue')}
             onPress={handleSendOTP}
             disabled={!isPhoneValid}
             loading={loading}

@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert } fr
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import apiService from '../../services/api';
 import { API_ENDPOINTS } from '../../constants/api';
@@ -10,6 +11,7 @@ import Button from '../../components/common/Button';
 import { COLORS } from '../../constants/colors';
 
 const OnboardingHomeScreen = ({ navigation }) => {
+  const { t } = useTranslation();
   const { user, fetchUserProfile } = useAuth();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -89,15 +91,15 @@ const OnboardingHomeScreen = ({ navigation }) => {
       const response = await apiService.post(API_ENDPOINTS.PRO_SUBMIT);
       if (response.success) {
         Alert.alert(
-          'Application Submitted',
-          'Your application has been submitted for review. You will be notified once approved.',
-          [{ text: 'OK' }]
+          t('onboarding.home.applicationSubmitted'),
+          t('onboarding.home.applicationSubmittedMessage'),
+          [{ text: t('common.ok') }]
         );
         // Refresh user profile to get updated approval_status
         await fetchUserProfile();
       }
     } catch (error) {
-      Alert.alert('Error', error.message || 'Failed to submit application');
+      Alert.alert(t('common.error'), error.message || 'Failed to submit application');
     } finally {
       setSubmitting(false);
     }
@@ -106,29 +108,29 @@ const OnboardingHomeScreen = ({ navigation }) => {
   const steps = [
     {
       id: 'documents',
-      title: 'Upload ID Documents',
-      description: 'Verify your identity by uploading your ID card',
+      title: t('onboarding.home.uploadDocuments'),
+      description: t('onboarding.home.uploadDocumentsDesc'),
       icon: 'id-card-outline',
       screen: 'UploadDocuments',
     },
     {
       id: 'services',
-      title: 'Add Your Services',
-      description: 'Select the services you offer and set your prices',
+      title: t('onboarding.home.addServices'),
+      description: t('onboarding.home.addServicesDesc'),
       icon: 'construct-outline',
       screen: 'AddServices',
     },
     {
       id: 'zones',
-      title: 'Set Coverage Zones',
-      description: 'Choose the areas where you provide services',
+      title: t('onboarding.home.setZones'),
+      description: t('onboarding.home.setZonesDesc'),
       icon: 'location-outline',
       screen: 'AddZones',
     },
     {
       id: 'schedule',
-      title: 'Set Your Schedule',
-      description: 'Set your weekly availability for appointments',
+      title: t('onboarding.home.setSchedule'),
+      description: t('onboarding.home.setScheduleDesc'),
       icon: 'calendar-outline',
       screen: 'Availability',
     },
@@ -149,11 +151,11 @@ const OnboardingHomeScreen = ({ navigation }) => {
     switch (status) {
       case 'completed':
         // Show "Submitted" for documents, "Completed" for others
-        return stepId === 'documents' ? 'Submitted' : 'Completed';
+        return stepId === 'documents' ? t('onboarding.home.submitted') : t('onboarding.home.completed');
       case 'pending_review':
-        return 'Under Review';
+        return t('onboarding.home.underReview');
       default:
-        return 'Pending';
+        return t('onboarding.home.pending');
     }
   };
 
@@ -174,13 +176,13 @@ const OnboardingHomeScreen = ({ navigation }) => {
             className="text-2xl font-bold text-white mb-2"
             style={{ fontFamily: 'Poppins-Bold' }}
           >
-            Complete Your Profile
+            {t('onboarding.home.title')}
           </Text>
           <Text
             className="text-base text-blue-100"
             style={{ fontFamily: 'Poppins-Regular' }}
           >
-            Finish these steps to get your account approved
+            {t('onboarding.home.subtitle')}
           </Text>
         </View>
 
@@ -190,7 +192,7 @@ const OnboardingHomeScreen = ({ navigation }) => {
             className="text-lg font-semibold text-gray-900 mb-4"
             style={{ fontFamily: 'Poppins-SemiBold' }}
           >
-            Setup Steps
+            {t('onboarding.home.setupSteps')}
           </Text>
 
           {steps.map((step, index) => {
@@ -260,20 +262,20 @@ const OnboardingHomeScreen = ({ navigation }) => {
                     className="text-sm font-medium text-green-900"
                     style={{ fontFamily: 'Poppins-Medium' }}
                   >
-                    All Steps Completed!
+                    {t('onboarding.home.allCompleted')}
                   </Text>
                   <Text
                     className="text-sm text-green-700 mt-1"
                     style={{ fontFamily: 'Poppins-Regular' }}
                   >
-                    You're ready to submit your application for review.
+                    {t('onboarding.home.readyToSubmit')}
                   </Text>
                 </View>
               </View>
             </View>
 
             <Button
-              title="Submit Application for Review"
+              title={t('onboarding.home.submitApplication')}
               onPress={handleSubmitApplication}
               loading={submitting}
               icon={<Ionicons name="paper-plane-outline" size={20} color="#FFFFFF" />}
@@ -293,13 +295,13 @@ const OnboardingHomeScreen = ({ navigation }) => {
                   className="text-lg font-bold text-blue-900 text-center mb-2"
                   style={{ fontFamily: 'Poppins-Bold' }}
                 >
-                  Waiting for Admin Approval
+                  {t('onboarding.home.waitingApproval')}
                 </Text>
                 <Text
                   className="text-sm text-blue-700 text-center mb-4"
                   style={{ fontFamily: 'Poppins-Regular' }}
                 >
-                  Your profile is 100% complete! Our team is reviewing your application. You'll be notified once approved.
+                  {t('onboarding.home.profileComplete')}
                 </Text>
                 <View className="flex-row items-center bg-green-100 px-4 py-2 rounded-full">
                   <Ionicons name="checkmark-circle" size={18} color={COLORS.success} />
@@ -307,14 +309,14 @@ const OnboardingHomeScreen = ({ navigation }) => {
                     className="text-sm text-green-700 ml-2"
                     style={{ fontFamily: 'Poppins-Medium' }}
                   >
-                    All steps completed
+                    {t('onboarding.home.allStepsCompleted')}
                   </Text>
                 </View>
               </View>
             </View>
 
             <Button
-              title="View Application Status"
+              title={t('onboarding.home.viewStatus')}
               onPress={() => navigation.navigate('PendingApproval')}
               variant="secondary"
               style={{ marginTop: 16 }}
@@ -333,20 +335,20 @@ const OnboardingHomeScreen = ({ navigation }) => {
                     className="text-sm font-medium text-red-900"
                     style={{ fontFamily: 'Poppins-Medium' }}
                   >
-                    Application Previously Rejected
+                    {t('onboarding.home.previouslyRejected')}
                   </Text>
                   <Text
                     className="text-sm text-red-700 mt-1"
                     style={{ fontFamily: 'Poppins-Regular' }}
                   >
-                    {user?.rejection_reason || 'Your application was not approved. Please review and update your profile before resubmitting.'}
+                    {user?.rejection_reason || t('onboarding.home.rejectedDefaultMessage')}
                   </Text>
                 </View>
               </View>
             </View>
 
             <Button
-              title="Submit for Review Again"
+              title={t('onboarding.home.submitAgain')}
               onPress={() => navigation.navigate('AccountRejected')}
               icon={<Ionicons name="paper-plane-outline" size={20} color="#FFFFFF" />}
             />
@@ -364,13 +366,13 @@ const OnboardingHomeScreen = ({ navigation }) => {
                     className="text-sm font-medium text-yellow-900"
                     style={{ fontFamily: 'Poppins-Medium' }}
                   >
-                    Profile Incomplete
+                    {t('onboarding.home.profileIncomplete')}
                   </Text>
                   <Text
                     className="text-sm text-yellow-700 mt-1"
                     style={{ fontFamily: 'Poppins-Regular' }}
                   >
-                    Complete all steps above to submit your application for approval.
+                    {t('onboarding.home.completeAllSteps')}
                   </Text>
                 </View>
               </View>

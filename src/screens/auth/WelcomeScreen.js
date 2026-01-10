@@ -2,15 +2,18 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import Button from '../../components/common/Button';
 import Logo from '../../components/common/Logo';
 
 const WelcomeScreen = ({ navigation }) => {
+  const { t } = useTranslation();
+
   const features = [
-    { icon: 'briefcase-outline', text: 'Offer your services' },
-    { icon: 'cash-outline', text: 'Set your own rates' },
-    { icon: 'calendar-outline', text: 'Manage bookings' },
-    { icon: 'wallet-outline', text: 'Track earnings' },
+    { icon: 'briefcase-outline', text: t('auth.welcome.offerServices') },
+    { icon: 'cash-outline', text: t('auth.welcome.setRates') },
+    { icon: 'calendar-outline', text: t('auth.welcome.manageBookings') },
+    { icon: 'wallet-outline', text: t('auth.welcome.trackEarnings') },
   ];
 
   return (
@@ -27,7 +30,7 @@ const WelcomeScreen = ({ navigation }) => {
             className="text-gray-900 mb-8"
             style={{ fontFamily: 'Poppins-SemiBold', fontSize: 22 }}
           >
-            Grow your business
+            {t('auth.welcome.growBusiness')}
           </Text>
 
           {features.map((feature, index) => (
@@ -56,13 +59,13 @@ const WelcomeScreen = ({ navigation }) => {
                 className="text-gray-800"
                 style={{ fontFamily: 'Poppins-Medium', fontSize: 14 }}
               >
-                Gabon Only
+                {t('auth.welcome.gabonOnly')}
               </Text>
               <Text
                 className="text-gray-500"
                 style={{ fontFamily: 'Poppins-Regular', fontSize: 12 }}
               >
-                Available for +241 numbers
+                {t('auth.welcome.availableNumbers')}
               </Text>
             </View>
           </View>
@@ -72,13 +75,13 @@ const WelcomeScreen = ({ navigation }) => {
       {/* Bottom Buttons */}
       <View className="px-8 pb-8">
         <Button
-          title="Sign In"
+          title={t('auth.welcome.signIn')}
           onPress={() => navigation.navigate('PhoneInput', { mode: 'signin' })}
           icon={<Ionicons name="log-in-outline" size={20} color="#FFFFFF" />}
         />
         <View className="h-3" />
         <Button
-          title="Sign Up"
+          title={t('auth.welcome.signUp')}
           onPress={() => navigation.navigate('PhoneInput', { mode: 'signup' })}
           variant="outline"
           icon={<Ionicons name="person-add-outline" size={20} color="#2563EB" />}

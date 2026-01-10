@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Alert, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import apiService, { ApiError } from '../../services/api';
@@ -10,6 +11,7 @@ import { useAuth } from '../../context/AuthContext';
 import { validateReferralCode } from '../../services/incentiveService';
 
 const SignupScreen = ({ navigation, route }) => {
+  const { t } = useTranslation();
   const { phone } = route.params;
   const { login } = useAuth();
 
@@ -49,11 +51,11 @@ const SignupScreen = ({ navigation, route }) => {
         setReferralCodeValid(true);
       } else {
         setReferralCodeValid(false);
-        setErrors({ ...errors, referralCode: response.data?.reason || 'Invalid referral code' });
+        setErrors({ ...errors, referralCode: response.data?.reason || t('auth.signup.invalidCode') });
       }
     } catch (error) {
       setReferralCodeValid(false);
-      setErrors({ ...errors, referralCode: 'Invalid referral code' });
+      setErrors({ ...errors, referralCode: t('auth.signup.invalidCode') });
     } finally {
       setReferralCodeChecking(false);
     }
@@ -63,15 +65,15 @@ const SignupScreen = ({ navigation, route }) => {
     const newErrors = {};
 
     if (!firstName || firstName.length < 2) {
-      newErrors.firstName = 'First name must be at least 2 characters';
+      newErrors.firstName = t('auth.signup.firstNameError');
     }
 
     if (!lastName || lastName.length < 2) {
-      newErrors.lastName = 'Last name must be at least 2 characters';
+      newErrors.lastName = t('auth.signup.lastNameError');
     }
 
     if (!bio || bio.length < 10) {
-      newErrors.bio = 'Please describe your services (at least 10 characters)';
+      newErrors.bio = t('auth.signup.bioError');
     }
 
     setErrors(newErrors);
@@ -104,16 +106,16 @@ const SignupScreen = ({ navigation, route }) => {
         // Login and let AppNavigator handle navigation automatically
         await login(response.data.token, response.data.user, response.data.refreshToken);
         Alert.alert(
-          'Account Created!',
-          'Your account has been created. Complete your profile to get approved.',
-          [{ text: 'Continue' }] // No navigation needed - AppNavigator auto-redirects
+          t('auth.signup.accountCreated'),
+          t('auth.signup.accountCreatedMessage'),
+          [{ text: t('common.continue') }] // No navigation needed - AppNavigator auto-redirects
         );
       }
     } catch (error) {
       if (error.code === 'RATE_LIMITED') {
         Alert.alert(
-          'Please Wait',
-          `Too many requests. Try again in ${error.retryAfter} seconds.`
+          t('common.pleaseWait'),
+          t('common.tooManyRequests', { seconds: error.retryAfter })
         );
       } else if (error.code === 'VALIDATION_ERROR') {
         // Handle field-level validation errors from server
@@ -132,12 +134,12 @@ const SignupScreen = ({ navigation, route }) => {
           setErrors(newErrors);
           // Also show a general alert with all errors
           const errorMsg = error.errors.map(e => e.msg).join('\n');
-          Alert.alert('Validation Error', errorMsg);
+          Alert.alert(t('common.validationError'), errorMsg);
         } else {
-          Alert.alert('Validation Error', error.message);
+          Alert.alert(t('common.validationError'), error.message);
         }
       } else {
-        Alert.alert('Error', error.message || 'Failed to create account');
+        Alert.alert(t('common.error'), error.message || 'Failed to create account');
       }
     } finally {
       setLoading(false);
@@ -170,14 +172,14 @@ const SignupScreen = ({ navigation, route }) => {
               className="text-2xl font-bold text-gray-900 mb-2"
               style={{ fontFamily: 'Poppins-Bold' }}
             >
-              Create your Pro account
+              {t('auth.signup.title')}
             </Text>
 
             <Text
               className="text-base text-gray-500"
               style={{ fontFamily: 'Poppins-Regular' }}
             >
-              Tell us about yourself and your services
+              {t('auth.signup.subtitle')}
             </Text>
           </View>
 
@@ -188,10 +190,10 @@ const SignupScreen = ({ navigation, route }) => {
                 className="text-sm font-medium text-gray-700 mb-2"
                 style={{ fontFamily: 'Poppins-Medium' }}
               >
-                First Name
+                {t('auth.signup.firstName')}
               </Text>
               <Input
-                placeholder="Enter your first name"
+                placeholder={t('auth.signup.firstNamePlaceholder')}
                 value={firstName}
                 onChangeText={(text) => {
                   setFirstName(text);
@@ -209,10 +211,10 @@ const SignupScreen = ({ navigation, route }) => {
                 className="text-sm font-medium text-gray-700 mb-2"
                 style={{ fontFamily: 'Poppins-Medium' }}
               >
-                Last Name
+                {t('auth.signup.lastName')}
               </Text>
               <Input
-                placeholder="Enter your last name"
+                placeholder={t('auth.signup.lastNamePlaceholder')}
                 value={lastName}
                 onChangeText={(text) => {
                   setLastName(text);
@@ -230,10 +232,10 @@ const SignupScreen = ({ navigation, route }) => {
                 className="text-sm font-medium text-gray-700 mb-2"
                 style={{ fontFamily: 'Poppins-Medium' }}
               >
-                About Your Services
+                {t('auth.signup.aboutServices')}
               </Text>
               <Input
-                placeholder="Describe your professional experience and the services you offer..."
+                placeholder={t('auth.signup.aboutPlaceholder')}
                 value={bio}
                 onChangeText={(text) => {
                   setBio(text);
@@ -253,10 +255,10 @@ const SignupScreen = ({ navigation, route }) => {
                 className="text-sm font-medium text-gray-700 mb-2"
                 style={{ fontFamily: 'Poppins-Medium' }}
               >
-                Referral Code (Optional)
+                {t('auth.signup.referralCode')}
               </Text>
               <Input
-                placeholder="Enter code if referred by another provider"
+                placeholder={t('auth.signup.referralPlaceholder')}
                 value={referralCode}
                 onChangeText={handleReferralCodeChange}
                 icon="gift-outline"
@@ -269,7 +271,7 @@ const SignupScreen = ({ navigation, route }) => {
                   className="text-gray-400 mt-1"
                   style={{ fontFamily: 'Poppins-Regular', fontSize: 12 }}
                 >
-                  Checking code...
+                  {t('auth.signup.checkingCode')}
                 </Text>
               )}
               {referralCodeValid === true && (
@@ -279,7 +281,7 @@ const SignupScreen = ({ navigation, route }) => {
                     className="text-green-600 ml-1"
                     style={{ fontFamily: 'Poppins-Regular', fontSize: 12 }}
                   >
-                    Valid code! You'll receive a bonus when qualified.
+                    {t('auth.signup.validCode')}
                   </Text>
                 </View>
               )}
@@ -294,17 +296,13 @@ const SignupScreen = ({ navigation, route }) => {
                     className="text-sm font-medium text-blue-900"
                     style={{ fontFamily: 'Poppins-Medium' }}
                   >
-                    What happens next?
+                    {t('auth.signup.whatHappensNext')}
                   </Text>
                   <Text
                     className="text-sm text-blue-700 mt-1"
                     style={{ fontFamily: 'Poppins-Regular' }}
                   >
-                    After creating your account, you'll need to:{'\n'}
-                    1. Upload your ID documents{'\n'}
-                    2. Add your services{'\n'}
-                    3. Select your coverage zones{'\n'}
-                    4. Wait for admin approval
+                    {t('auth.signup.nextSteps')}
                   </Text>
                 </View>
               </View>
@@ -312,7 +310,7 @@ const SignupScreen = ({ navigation, route }) => {
 
             {/* Create Account Button */}
             <Button
-              title="Create Account"
+              title={t('auth.signup.createAccount')}
               onPress={handleCreateAccount}
               disabled={!firstName || !lastName || !bio}
               loading={loading}

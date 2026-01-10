@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import Button from '../../components/common/Button';
 import OTPInput from '../../components/auth/OTPInput';
 import apiService, { ApiError } from '../../services/api';
@@ -9,6 +10,7 @@ import { API_ENDPOINTS } from '../../constants/api';
 import { useAuth } from '../../context/AuthContext';
 
 const OTPVerificationScreen = ({ navigation, route }) => {
+  const { t } = useTranslation();
   const { phone, countryCode, fullPhone } = route.params;
   const { login } = useAuth();
 
@@ -34,7 +36,7 @@ const OTPVerificationScreen = ({ navigation, route }) => {
 
   const handleVerify = async (otpCode = otp) => {
     if (otpCode.length !== 6) {
-      setError('Please enter complete OTP');
+      setError(t('auth.otp.enterComplete'));
       return;
     }
 
@@ -58,7 +60,15 @@ const OTPVerificationScreen = ({ navigation, route }) => {
           // Check if user is a Pro
           const userRole = response.data.user?.role;
           if (userRole !== 'pro') {
-            setError('This app is for Pro accounts only. Please use the customer app.');
+            const appName = userRole === 'user' ? 'OneMarket' : 'OneMarket Business';
+            Alert.alert(
+              t('auth.phoneInput.wrongApp'),
+              t('auth.phoneInput.wrongAppMessage', {
+                role: userRole === 'user' ? t('auth.phoneInput.customer') : t('auth.phoneInput.business'),
+                appName
+              }),
+              [{ text: t('common.ok') }]
+            );
             setOtp('');
             return;
           }
@@ -73,8 +83,8 @@ const OTPVerificationScreen = ({ navigation, route }) => {
     } catch (error) {
       if (error.code === 'RATE_LIMITED') {
         Alert.alert(
-          'Please Wait',
-          `Too many requests. Try again in ${error.retryAfter} seconds.`
+          t('common.pleaseWait'),
+          t('common.tooManyRequests', { seconds: error.retryAfter })
         );
         setOtp('');
       } else if (error.code === 'VALIDATION_ERROR') {
@@ -82,7 +92,7 @@ const OTPVerificationScreen = ({ navigation, route }) => {
         setError(errorMsg);
         setOtp('');
       } else {
-        setError(error.message || 'Invalid or expired code');
+        setError(error.message || t('auth.otp.invalidCode'));
         setOtp('');
       }
     } finally {
@@ -106,7 +116,7 @@ const OTPVerificationScreen = ({ navigation, route }) => {
       });
 
       if (response.success) {
-        Alert.alert('Success', 'A new code has been sent to your phone');
+        Alert.alert(t('common.success'), t('auth.otp.codeSent'));
         setCountdown(30);
         setOtp('');
         setError('');
@@ -114,14 +124,14 @@ const OTPVerificationScreen = ({ navigation, route }) => {
     } catch (error) {
       if (error.code === 'RATE_LIMITED') {
         Alert.alert(
-          'Please Wait',
-          `Too many requests. Try again in ${error.retryAfter} seconds.`
+          t('common.pleaseWait'),
+          t('common.tooManyRequests', { seconds: error.retryAfter })
         );
       } else if (error.code === 'VALIDATION_ERROR') {
         const errorMsg = error.errors?.map(e => e.msg).join('\n') || error.message;
-        Alert.alert('Validation Error', errorMsg);
+        Alert.alert(t('common.validationError'), errorMsg);
       } else {
-        Alert.alert('Error', error.message || 'Failed to resend code');
+        Alert.alert(t('common.error'), error.message || 'Failed to resend code');
       }
     } finally {
       setResendLoading(false);
@@ -145,14 +155,14 @@ const OTPVerificationScreen = ({ navigation, route }) => {
           className="text-2xl font-bold text-gray-900 mb-2"
           style={{ fontFamily: 'Poppins-Bold' }}
         >
-          Verify your phone
+          {t('auth.otp.title')}
         </Text>
 
         <Text
           className="text-base text-gray-500"
           style={{ fontFamily: 'Poppins-Regular' }}
         >
-          Enter the 6-digit code sent to
+          {t('auth.otp.subtitle')}
         </Text>
         <Text
           className="text-base text-gray-900 font-semibold"
@@ -193,7 +203,7 @@ const OTPVerificationScreen = ({ navigation, route }) => {
                 className="text-gray-500 ml-2"
                 style={{ fontFamily: 'Poppins-Regular' }}
               >
-                Resend code in {countdown}s
+                {t('auth.otp.resendIn', { seconds: countdown })}
               </Text>
             </View>
           ) : (
@@ -211,7 +221,7 @@ const OTPVerificationScreen = ({ navigation, route }) => {
                 className={`ml-2 ${resendLoading ? 'text-gray-400' : 'text-primary'}`}
                 style={{ fontFamily: 'Poppins-Medium' }}
               >
-                {resendLoading ? 'Sending...' : 'Resend Code'}
+                {resendLoading ? t('auth.otp.sending') : t('auth.otp.resend')}
               </Text>
             </TouchableOpacity>
           )}
@@ -220,7 +230,7 @@ const OTPVerificationScreen = ({ navigation, route }) => {
         {/* Verify Button */}
         <View className="mt-8 px-2">
           <Button
-            title={loading ? 'Verifying...' : 'Verify'}
+            title={loading ? t('auth.otp.verifying') : t('auth.otp.verify')}
             onPress={() => handleVerify()}
             disabled={otp.length !== 6 || loading}
             loading={loading}
@@ -232,7 +242,7 @@ const OTPVerificationScreen = ({ navigation, route }) => {
           className="text-sm text-gray-400 text-center mt-6"
           style={{ fontFamily: 'Poppins-Regular' }}
         >
-          Didn't receive the code? Check your spam folder or try resending
+          {t('auth.otp.helpText')}
         </Text>
       </View>
     </SafeAreaView>

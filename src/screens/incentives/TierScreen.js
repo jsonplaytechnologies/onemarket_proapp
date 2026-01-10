@@ -54,8 +54,8 @@ const TierScreen = ({ navigation }) => {
   const bonusRate = tierStatus?.bonusRate || currentTierInfo.bonusRate || 0;
   const progress = tierStatus?.progressToNext || tierStatus?.progress || {};
 
-  const jobsCompleted = tierStatus?.jobsCompleted || progress.jobs?.current || 0;
-  const averageRating = tierStatus?.averageRating || progress.rating?.current || 0;
+  const jobsCompleted = Number(tierStatus?.jobsCompleted || progress.jobs?.current) || 0;
+  const averageRating = Number(tierStatus?.averageRating || progress.rating?.current) || 0;
 
   // Merge API tier benefits with hardcoded UI info (name, icon, colors)
   const getMergedTierInfo = (tierKey) => {
@@ -271,14 +271,14 @@ const TierScreen = ({ navigation }) => {
                     className="text-gray-800"
                     style={{ fontFamily: 'Poppins-SemiBold', fontSize: 13 }}
                   >
-                    {(progress.rating?.current || averageRating || 0).toFixed(1)} / {(progress.rating?.required || getMergedTierInfo(nextTier)?.minRating || 0).toFixed(1)}
+                    {(Number(progress.rating?.current) || averageRating || 0).toFixed(1)} / {(Number(progress.rating?.required) || Number(getMergedTierInfo(nextTier)?.minRating) || 0).toFixed(1)}
                   </Text>
                 </View>
                 <View className="h-3 bg-gray-200 rounded-full overflow-hidden">
                   <View
                     className="h-full rounded-full"
                     style={{
-                      width: `${Math.min((((progress.rating?.current || averageRating || 0) / (progress.rating?.required || getMergedTierInfo(nextTier)?.minRating || 1)) * 100) || 0, 100)}%`,
+                      width: `${Math.min((((Number(progress.rating?.current) || averageRating || 0) / (Number(progress.rating?.required) || Number(getMergedTierInfo(nextTier)?.minRating) || 1)) * 100) || 0, 100)}%`,
                       backgroundColor: currentTierInfo.color,
                     }}
                   />
@@ -348,7 +348,7 @@ const TierScreen = ({ navigation }) => {
                       className="text-gray-500"
                       style={{ fontFamily: 'Poppins-Regular', fontSize: 12 }}
                     >
-                      {tierInfo.minJobs}+ jobs, {(tierInfo.minRating || 0).toFixed(1)}+ rating
+                      {tierInfo.minJobs}+ jobs, {(Number(tierInfo.minRating) || 0).toFixed(1)}+ rating
                     </Text>
                   </View>
                   <View className="items-end">

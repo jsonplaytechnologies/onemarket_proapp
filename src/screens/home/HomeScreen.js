@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
 import apiService from '../../services/api';
@@ -23,6 +24,7 @@ import { TierBadge, ReferralCodeCard } from '../../components/incentives';
 import { useIncentive } from '../../context/IncentiveContext';
 
 const HomeScreen = ({ navigation }) => {
+  const { t } = useTranslation();
   const { user, updateUser, fetchUserProfile, isProfileStale } = useAuth();
   const { unreadCount, refreshTrigger } = useNotifications();
   const {
@@ -197,6 +199,14 @@ const HomeScreen = ({ navigation }) => {
     ACTION_REQUIRED_STATUSES.includes(b.status)
   );
 
+  // Get greeting based on time
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return t('home.greeting.morning');
+    if (hour < 17) return t('home.greeting.afternoon');
+    return t('home.greeting.evening');
+  };
+
   if (loading) {
     return (
       <View className="flex-1 bg-white items-center justify-center">
@@ -244,7 +254,7 @@ const HomeScreen = ({ navigation }) => {
               className="text-gray-400"
               style={{ fontFamily: 'Poppins-Regular', fontSize: 14 }}
             >
-              Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'},
+              {getGreeting()}
             </Text>
             <View className="flex-row items-center">
               <Text
@@ -280,13 +290,13 @@ const HomeScreen = ({ navigation }) => {
                   className={isOnline ? 'text-green-800' : 'text-gray-700'}
                   style={{ fontFamily: 'Poppins-SemiBold', fontSize: 15 }}
                 >
-                  {isOnline ? 'You are Online' : 'You are Offline'}
+                  {isOnline ? t('home.online.youAreOnline') : t('home.online.youAreOffline')}
                 </Text>
                 <Text
                   className={isOnline ? 'text-green-600' : 'text-gray-500'}
                   style={{ fontFamily: 'Poppins-Regular', fontSize: 12 }}
                 >
-                  {isOnline ? 'Accepting Book Now requests' : 'Toggle on to accept instant bookings'}
+                  {isOnline ? t('home.online.acceptingBookNow') : t('home.online.toggleToAccept')}
                 </Text>
               </View>
             </View>
@@ -312,7 +322,7 @@ const HomeScreen = ({ navigation }) => {
                 className="text-white/70"
                 style={{ fontFamily: 'Poppins-Regular', fontSize: 13 }}
               >
-                Today's Earnings
+                {t('home.earnings.todaysEarnings')}
               </Text>
               <View className="bg-white/20 rounded-lg px-2 py-1">
                 <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
@@ -339,7 +349,7 @@ const HomeScreen = ({ navigation }) => {
                   className="text-white/60"
                   style={{ fontFamily: 'Poppins-Regular', fontSize: 10 }}
                 >
-                  Wallet
+                  {t('home.earnings.wallet')}
                 </Text>
               </View>
               <View className="flex-1 items-center">
@@ -353,7 +363,7 @@ const HomeScreen = ({ navigation }) => {
                   className="text-white/60"
                   style={{ fontFamily: 'Poppins-Regular', fontSize: 10 }}
                 >
-                  Jobs Done
+                  {t('home.earnings.jobsDone')}
                 </Text>
               </View>
             </View>
@@ -364,13 +374,13 @@ const HomeScreen = ({ navigation }) => {
         <View className="px-6 mb-6">
           <View className="flex-row justify-between">
             {[
-              { icon: 'calendar-outline', label: 'Schedule', screen: 'MySchedule' },
-              { icon: 'briefcase-outline', label: 'Bookings', screen: 'Bookings' },
-              { icon: 'wallet-outline', label: 'Wallet', screen: 'Earnings' },
-              { icon: 'construct-outline', label: 'Services', screen: 'MyServices' },
+              { icon: 'calendar-outline', label: t('home.quickActions.schedule'), screen: 'MySchedule' },
+              { icon: 'briefcase-outline', label: t('home.quickActions.bookings'), screen: 'Bookings' },
+              { icon: 'wallet-outline', label: t('home.quickActions.wallet'), screen: 'Earnings' },
+              { icon: 'construct-outline', label: t('home.quickActions.services'), screen: 'MyServices' },
             ].map((action) => (
               <TouchableOpacity
-                key={action.label}
+                key={action.screen}
                 className="items-center"
                 onPress={() => navigation.navigate(action.screen)}
                 activeOpacity={0.7}
@@ -422,7 +432,7 @@ const HomeScreen = ({ navigation }) => {
                 className="text-gray-900"
                 style={{ fontFamily: 'Poppins-SemiBold', fontSize: 18 }}
               >
-                Action Required
+                {t('home.actionRequired')}
               </Text>
               <View className="bg-red-500 ml-2 w-6 h-6 rounded-full items-center justify-center">
                 <Text className="text-white text-xs" style={{ fontFamily: 'Poppins-Bold' }}>
@@ -448,14 +458,14 @@ const HomeScreen = ({ navigation }) => {
               className="text-gray-900"
               style={{ fontFamily: 'Poppins-SemiBold', fontSize: 18 }}
             >
-              Recent Activity
+              {t('home.recentActivity')}
             </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Bookings')}>
               <Text
                 className="text-primary"
                 style={{ fontFamily: 'Poppins-Medium', fontSize: 14 }}
               >
-                See All
+                {t('home.seeAll')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -477,7 +487,7 @@ const HomeScreen = ({ navigation }) => {
                 className="text-gray-400"
                 style={{ fontFamily: 'Poppins-Regular', fontSize: 14 }}
               >
-                No bookings yet
+                {t('home.noBookingsYet')}
               </Text>
             </View>
           )}
