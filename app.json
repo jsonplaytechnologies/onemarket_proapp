@@ -19,6 +19,13 @@
           "photosPermission": "Allow OneMarket Pro to access your photos for ID verification and profile picture.",
           "cameraPermission": "Allow OneMarket Pro to access your camera for ID verification and profile picture."
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#2563EB"
+        }
       ]
     ],
     "ios": {
@@ -31,10 +38,20 @@
         "backgroundColor": "#2563EB"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.onemarket.pro"
+      "package": "com.onemarket.pro",
+      "useNextNotificationsApi": true,
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "7409abce-92a9-419c-ad18-510d3cf53e91"
+      }
+    },
+    "owner": "paras0369"
   }
 }
