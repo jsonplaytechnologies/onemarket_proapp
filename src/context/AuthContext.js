@@ -3,7 +3,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import apiService from '../services/api';
 import { API_ENDPOINTS } from '../constants/api';
 import cacheManager, { CACHE_KEYS, CACHE_TYPES } from '../utils/cacheManager';
-import { removePushToken } from '../services/pushTokenService';
 
 export const AuthContext = createContext();
 
@@ -105,21 +104,8 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      // Remove push token from backend before clearing auth
-      try {
-        const pushToken = await AsyncStorage.getItem('expoPushToken');
-        if (pushToken) {
-          await removePushToken(pushToken);
-        }
-      } catch (pushError) {
-        console.error('Failed to remove push token:', pushError);
-        // Continue with logout even if push token removal fails
-      }
-
       // Use api service to clear tokens (clears token, refreshToken, and user)
       await apiService.clearTokens();
-      // Clear push token from local storage
-      await AsyncStorage.removeItem('expoPushToken');
       // Clear all cached data on logout
       cacheManager.clear();
       setToken(null);

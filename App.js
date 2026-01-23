@@ -11,7 +11,7 @@ import {
   Poppins_600SemiBold,
   Poppins_700Bold,
 } from '@expo-google-fonts/poppins';
-import { AuthProvider, useAuth } from './src/context/AuthContext';
+import { AuthProvider } from './src/context/AuthContext';
 import { SocketProvider } from './src/context/SocketContext';
 import { NotificationProvider } from './src/context/NotificationContext';
 import { BookingProvider } from './src/context/BookingContext';
@@ -20,20 +20,9 @@ import { LanguageProvider, useLanguage } from './src/context/LanguageContext';
 import AppNavigator from './src/navigation/AppNavigator';
 import LanguageSelector from './src/components/common/LanguageSelector';
 import { COLORS } from './src/constants/colors';
-import { usePushNotifications } from './src/hooks/usePushNotifications';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
-
-// Component to handle push notifications (must be inside AuthProvider)
-const PushNotificationHandler = ({ children }) => {
-  const { isAuthenticated } = useAuth();
-
-  // Initialize push notifications when user is authenticated
-  usePushNotifications(isAuthenticated);
-
-  return children;
-};
 
 // Inner app component that uses language context
 const AppContent = () => {
@@ -61,18 +50,16 @@ const AppContent = () => {
   return (
     <>
       <AuthProvider>
-        <PushNotificationHandler>
-          <SocketProvider>
-            <NotificationProvider>
-              <BookingProvider>
-                <IncentiveProvider>
-                  <AppNavigator />
-                  <StatusBar style="auto" />
-                </IncentiveProvider>
-              </BookingProvider>
-            </NotificationProvider>
-          </SocketProvider>
-        </PushNotificationHandler>
+        <SocketProvider>
+          <NotificationProvider>
+            <BookingProvider>
+              <IncentiveProvider>
+                <AppNavigator />
+                <StatusBar style="auto" />
+              </IncentiveProvider>
+            </BookingProvider>
+          </NotificationProvider>
+        </SocketProvider>
       </AuthProvider>
       <LanguageSelector
         visible={showLanguageSelector}
