@@ -11,27 +11,31 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useTranslation } from 'react-i18next';
 import apiService from '../../services/api';
 import { API_ENDPOINTS } from '../../constants/api';
 import { COLORS } from '../../constants/colors';
 import Button from '../../components/common/Button';
 
-const DAYS_OF_WEEK = [
-  { key: 0, label: 'Sunday', short: 'Sun' },
-  { key: 1, label: 'Monday', short: 'Mon' },
-  { key: 2, label: 'Tuesday', short: 'Tue' },
-  { key: 3, label: 'Wednesday', short: 'Wed' },
-  { key: 4, label: 'Thursday', short: 'Thu' },
-  { key: 5, label: 'Friday', short: 'Fri' },
-  { key: 6, label: 'Saturday', short: 'Sat' },
+const getDaysOfWeek = (t) => [
+  { key: 0, label: t('daysOfWeek.sunday'), short: t('daysOfWeek.sunShort') },
+  { key: 1, label: t('daysOfWeek.monday'), short: t('daysOfWeek.monShort') },
+  { key: 2, label: t('daysOfWeek.tuesday'), short: t('daysOfWeek.tueShort') },
+  { key: 3, label: t('daysOfWeek.wednesday'), short: t('daysOfWeek.wedShort') },
+  { key: 4, label: t('daysOfWeek.thursday'), short: t('daysOfWeek.thuShort') },
+  { key: 5, label: t('daysOfWeek.friday'), short: t('daysOfWeek.friShort') },
+  { key: 6, label: t('daysOfWeek.saturday'), short: t('daysOfWeek.satShort') },
 ];
 
 const AvailabilityScreen = ({ navigation }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [availability, setAvailability] = useState({});
   const [showStartPicker, setShowStartPicker] = useState(null);
   const [showEndPicker, setShowEndPicker] = useState(null);
+
+  const DAYS_OF_WEEK = getDaysOfWeek(t);
 
   useEffect(() => {
     fetchAvailability();
@@ -54,7 +58,7 @@ const AvailabilityScreen = ({ navigation }) => {
       }
     } catch (error) {
       console.error('Error fetching availability:', error);
-      Alert.alert('Error', 'Failed to load availability');
+      Alert.alert(t('common.error'), t('availability.failedToLoad'));
     } finally {
       setLoading(false);
     }
@@ -127,12 +131,12 @@ const AvailabilityScreen = ({ navigation }) => {
       });
 
       if (response.success) {
-        Alert.alert('Success', 'Availability updated successfully');
+        Alert.alert(t('common.success'), t('availability.updatedSuccess'));
         navigation.goBack();
       }
     } catch (error) {
       console.error('Error saving availability:', error);
-      Alert.alert('Error', error.message || 'Failed to save availability');
+      Alert.alert(t('common.error'), error.message || t('availability.failedToSave'));
     } finally {
       setSaving(false);
     }
@@ -164,13 +168,13 @@ const AvailabilityScreen = ({ navigation }) => {
               className="text-xl font-bold text-gray-900"
               style={{ fontFamily: 'Poppins-Bold' }}
             >
-              Availability
+              {t('availability.title')}
             </Text>
             <Text
               className="text-sm text-gray-500"
               style={{ fontFamily: 'Poppins-Regular' }}
             >
-              Set your weekly schedule
+              {t('availability.subtitle')}
             </Text>
           </View>
         </View>
@@ -185,7 +189,7 @@ const AvailabilityScreen = ({ navigation }) => {
               className="text-blue-800 ml-3 flex-1"
               style={{ fontFamily: 'Poppins-Regular', fontSize: 13 }}
             >
-              Set your weekly schedule. Users will see these times as available when scheduling appointments with you.
+              {t('availability.infoBanner')}
             </Text>
           </View>
         </View>
@@ -224,7 +228,7 @@ const AvailabilityScreen = ({ navigation }) => {
                         className="text-gray-500 mb-2"
                         style={{ fontFamily: 'Poppins-Regular', fontSize: 12 }}
                       >
-                        Start Time
+                        {t('availability.startTime')}
                       </Text>
                       <TouchableOpacity
                         className="border border-gray-300 rounded-xl px-4 py-3 flex-row items-center justify-between"
@@ -246,7 +250,7 @@ const AvailabilityScreen = ({ navigation }) => {
                         className="text-gray-500 mb-2"
                         style={{ fontFamily: 'Poppins-Regular', fontSize: 12 }}
                       >
-                        End Time
+                        {t('availability.endTime')}
                       </Text>
                       <TouchableOpacity
                         className="border border-gray-300 rounded-xl px-4 py-3 flex-row items-center justify-between"
@@ -302,7 +306,7 @@ const AvailabilityScreen = ({ navigation }) => {
 
       {/* Save Button */}
       <View className="bg-white px-6 py-4 border-t border-gray-200">
-        <Button title="Save Availability" onPress={handleSave} loading={saving} />
+        <Button title={t('availability.saveAvailability')} onPress={handleSave} loading={saving} />
       </View>
     </SafeAreaView>
   );

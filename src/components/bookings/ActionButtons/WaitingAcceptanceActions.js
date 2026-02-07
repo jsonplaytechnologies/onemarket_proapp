@@ -6,6 +6,7 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 const formatCurrency = (amount) => {
   if (!amount) return 'N/A';
@@ -13,6 +14,7 @@ const formatCurrency = (amount) => {
 };
 
 const WaitingAcceptanceActions = ({ booking }) => {
+  const { t } = useTranslation();
   return (
     <View className="bg-indigo-50 p-5 rounded-xl">
       <View className="flex-row items-center mb-3">
@@ -21,7 +23,7 @@ const WaitingAcceptanceActions = ({ booking }) => {
           className="text-indigo-800 ml-2"
           style={{ fontFamily: 'Poppins-SemiBold', fontSize: 15 }}
         >
-          Waiting for Customer
+          {t('actionButtons.waitingForCustomer')}
         </Text>
       </View>
 
@@ -30,7 +32,7 @@ const WaitingAcceptanceActions = ({ booking }) => {
           className="text-indigo-700 mb-1"
           style={{ fontFamily: 'Poppins-Regular', fontSize: 13 }}
         >
-          Your Quote
+          {t('actionButtons.yourQuote')}
         </Text>
         <View className="flex-row items-baseline">
           <Text
@@ -54,7 +56,7 @@ const WaitingAcceptanceActions = ({ booking }) => {
         className="text-indigo-600 text-center mt-4"
         style={{ fontFamily: 'Poppins-Regular', fontSize: 13 }}
       >
-        Customer has been notified of your quote
+        {t('actionButtons.customerNotifiedQuote')}
       </Text>
     </View>
   );

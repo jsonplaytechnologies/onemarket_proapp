@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import StatusBadge from './StatusBadge';
 import BookNowBadge from './BookNowBadge';
 import { COLORS } from '../../constants/colors';
@@ -31,6 +32,7 @@ const StarRating = ({ rating, size = 14 }) => {
 };
 
 const BookingCard = ({ booking, onPress }) => {
+  const { t } = useTranslation();
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -40,7 +42,7 @@ const BookingCard = ({ booking, onPress }) => {
   };
 
   const formatPrice = (amount) => {
-    if (!amount) return 'Pending';
+    if (!amount) return t('bookingCard.pending');
     return `${amount.toLocaleString()} XAF`;
   };
 
@@ -61,21 +63,21 @@ const BookingCard = ({ booking, onPress }) => {
     });
 
     if (dateOnly.getTime() === today.getTime()) {
-      return `Today at ${time}`;
+      return t('bookingCard.todayAt', { time });
     } else if (dateOnly.getTime() === tomorrow.getTime()) {
-      return `Tomorrow at ${time}`;
+      return t('bookingCard.tomorrowAt', { time });
     } else {
-      return `${date.toLocaleDateString('en-US', {
+      return t('bookingCard.dateAt', { date: date.toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric'
-      })} at ${time}`;
+      }), time });
     }
   };
 
-  const serviceName = booking.service_name || booking.serviceName || booking.service?.name || 'Service';
+  const serviceName = booking.service_name || booking.serviceName || booking.service?.name || t('bookingCard.service');
   const userName = booking.user_first_name
     ? `${booking.user_first_name} ${booking.user_last_name || ''}`
-    : (booking.user?.firstName ? `${booking.user.firstName} ${booking.user.lastName || ''}` : 'Customer');
+    : (booking.user?.firstName ? `${booking.user.firstName} ${booking.user.lastName || ''}` : t('bookingCard.customer'));
   const userAvatar = booking.user_avatar || booking.userAvatar || booking.user?.avatar;
   const zoneName = booking.zone_name || booking.address?.zoneName || booking.zone?.name || '';
   const quotationAmount = booking.quotation_amount || booking.quotationAmount;
@@ -97,7 +99,7 @@ const BookingCard = ({ booking, onPress }) => {
 
   // Simplified card for expired/quote_expired bookings
   if (isExpired) {
-    const statusLabel = booking.status === 'quote_expired' ? 'Quote Expired' : 'Timed Out';
+    const statusLabel = booking.status === 'quote_expired' ? t('bookingCard.quoteExpired') : t('bookingCard.timedOut');
     return (
       <TouchableOpacity
         className="bg-amber-50 rounded-2xl p-4 mb-3 border border-amber-100"
@@ -226,7 +228,7 @@ const BookingCard = ({ booking, onPress }) => {
               className="text-gray-500 ml-1"
               style={{ fontFamily: 'Poppins-Medium', fontSize: 12 }}
             >
-              Reassigned
+              {t('bookingCard.reassigned')}
             </Text>
           </View>
         </View>
@@ -299,7 +301,7 @@ const BookingCard = ({ booking, onPress }) => {
               className="text-orange-600 ml-1"
               style={{ fontFamily: 'Poppins-Medium', fontSize: 12 }}
             >
-              Rejected
+              {t('bookingCard.rejected')}
             </Text>
           </View>
 
@@ -325,7 +327,7 @@ const BookingCard = ({ booking, onPress }) => {
     const iconBgColor = isFailed ? 'bg-red-100' : 'bg-gray-200';
     const iconColor = isFailed ? '#EF4444' : '#6B7280';
     const textColor = isFailed ? 'text-red-600' : 'text-gray-500';
-    const statusLabel = isFailed ? 'Failed' : 'Cancelled';
+    const statusLabel = isFailed ? t('bookingCard.failed') : t('bookingCard.cancelled');
     const statusIcon = isFailed ? 'alert-circle' : 'close-circle';
 
     return (
@@ -472,7 +474,7 @@ const BookingCard = ({ booking, onPress }) => {
               className="text-green-700 ml-1"
               style={{ fontFamily: 'Poppins-Medium', fontSize: 12 }}
             >
-              Completed
+              {t('bookingCard.completed')}
             </Text>
           </View>
 
@@ -491,7 +493,7 @@ const BookingCard = ({ booking, onPress }) => {
               className="text-gray-400"
               style={{ fontFamily: 'Poppins-Regular', fontSize: 11 }}
             >
-              No rating yet
+              {t('bookingCard.noRatingYet')}
             </Text>
           )}
         </View>
@@ -583,13 +585,13 @@ const BookingCard = ({ booking, onPress }) => {
                 className="text-gray-500"
                 style={{ fontFamily: 'Poppins-Regular', fontSize: 11 }}
               >
-                {booking.is_book_now ? 'Immediate Request' : 'Scheduled for'}
+                {booking.is_book_now ? t('bookingCard.immediateRequest') : t('bookingCard.scheduledFor')}
               </Text>
               <Text
                 className={booking.is_book_now ? 'text-red-600' : 'text-gray-900'}
                 style={{ fontFamily: 'Poppins-SemiBold', fontSize: 14 }}
               >
-                {booking.is_book_now ? 'ASAP' : formatRequestedDateTime(requestedDatetime)}
+                {booking.is_book_now ? t('bookingCard.asap') : formatRequestedDateTime(requestedDatetime)}
               </Text>
             </View>
           </View>
@@ -628,7 +630,7 @@ const BookingCard = ({ booking, onPress }) => {
           className="text-gray-400"
           style={{ fontFamily: 'Poppins-Regular', fontSize: 12 }}
         >
-          {quotationAmount ? 'Quoted' : 'Amount'}
+          {quotationAmount ? t('bookingCard.quoted') : t('bookingCard.amount')}
         </Text>
         <Text
           className="text-gray-900"

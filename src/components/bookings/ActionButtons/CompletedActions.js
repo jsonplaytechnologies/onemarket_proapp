@@ -6,6 +6,7 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../../constants/colors';
 
 // Star Rating Component
@@ -34,6 +35,7 @@ const StarRating = ({ rating, size = 20 }) => {
 };
 
 const CompletedActions = ({ booking }) => {
+  const { t } = useTranslation();
   const reviewRating = booking?.review_rating || booking?.reviewRating;
   const reviewText = booking?.review_comment || booking?.review_text || booking?.reviewText;
 
@@ -49,13 +51,13 @@ const CompletedActions = ({ booking }) => {
             className="text-green-800"
             style={{ fontFamily: 'Poppins-SemiBold', fontSize: 16 }}
           >
-            Job Completed!
+            {t('actionButtons.jobCompleted')}
           </Text>
           <Text
             className="text-green-600"
             style={{ fontFamily: 'Poppins-Regular', fontSize: 13 }}
           >
-            Earnings credited to your wallet
+            {t('actionButtons.earningsCredited')}
           </Text>
         </View>
       </View>
@@ -66,7 +68,7 @@ const CompletedActions = ({ booking }) => {
           className="text-gray-500 mb-2"
           style={{ fontFamily: 'Poppins-Medium', fontSize: 12 }}
         >
-          CUSTOMER RATING
+          {t('actionButtons.customerRating')}
         </Text>
 
         {reviewRating ? (
@@ -99,7 +101,7 @@ const CompletedActions = ({ booking }) => {
               className="text-gray-400 ml-2"
               style={{ fontFamily: 'Poppins-Regular', fontSize: 13 }}
             >
-              No rating yet
+              {t('actionButtons.noRatingYet')}
             </Text>
           </View>
         )}

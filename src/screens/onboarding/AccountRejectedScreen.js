@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/common/Button';
 import { COLORS } from '../../constants/colors';
@@ -9,12 +10,13 @@ import apiService from '../../services/api';
 import { API_ENDPOINTS } from '../../constants/api';
 
 const AccountRejectedScreen = ({ navigation }) => {
+  const { t } = useTranslation();
   const { user, logout, fetchUserProfile } = useAuth();
   const [reapplying, setReapplying] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [checking, setChecking] = useState(true);
 
-  const rejectionReason = user?.rejection_reason || user?.rejectionReason || 'Your account did not meet our requirements.';
+  const rejectionReason = user?.rejection_reason || user?.rejectionReason || t('onboarding.accountRejected.defaultReason');
 
   useEffect(() => {
     checkForChanges();
@@ -54,20 +56,20 @@ const AccountRejectedScreen = ({ navigation }) => {
   const handleReapply = async () => {
     if (!hasChanges) {
       Alert.alert(
-        'No Changes Made',
-        'Please update your profile information before resubmitting for review.',
-        [{ text: 'OK' }]
+        t('accountRejected.noChangesMade'),
+        t('accountRejected.noChangesMessage'),
+        [{ text: t('common.ok') }]
       );
       return;
     }
 
     Alert.alert(
-      'Reapply for Approval',
-      'Are you sure you want to submit your account for review again?',
+      t('accountRejected.reapplyConfirm'),
+      t('accountRejected.reapplyMessage'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Submit for Review',
+          text: t('accountRejected.submitForReviewButton'),
           onPress: async () => {
             setReapplying(true);
             try {
@@ -79,13 +81,13 @@ const AccountRejectedScreen = ({ navigation }) => {
                 }
 
                 Alert.alert(
-                  'Submitted!',
-                  'Your account has been submitted for review again. We will notify you once a decision is made.',
-                  [{ text: 'OK', onPress: () => navigation.replace('PendingApproval') }]
+                  t('accountRejected.reapplySuccess'),
+                  t('accountRejected.reapplySuccessMessage'),
+                  [{ text: t('common.ok'), onPress: () => navigation.replace('PendingApproval') }]
                 );
               }
             } catch (error) {
-              Alert.alert('Error', error.message || 'Failed to submit for review. Please try again.');
+              Alert.alert(t('common.error'), error.message || t('accountRejected.failedToSubmit'));
             } finally {
               setReapplying(false);
             }
@@ -115,7 +117,7 @@ const AccountRejectedScreen = ({ navigation }) => {
             className="text-2xl font-bold text-gray-900 text-center mb-2"
             style={{ fontFamily: 'Poppins-Bold' }}
           >
-            Account Not Approved
+            {t('accountRejected.title')}
           </Text>
 
           {/* Description */}
@@ -123,7 +125,7 @@ const AccountRejectedScreen = ({ navigation }) => {
             className="text-base text-gray-500 text-center mb-6"
             style={{ fontFamily: 'Poppins-Regular' }}
           >
-            Unfortunately, your account was not approved at this time.
+            {t('accountRejected.description')}
           </Text>
 
           {/* Rejection Reason Card */}
@@ -135,7 +137,7 @@ const AccountRejectedScreen = ({ navigation }) => {
                   className="text-sm font-medium text-red-900"
                   style={{ fontFamily: 'Poppins-Medium' }}
                 >
-                  Reason for Rejection
+                  {t('accountRejected.reasonForRejection')}
                 </Text>
                 <Text
                   className="text-sm text-red-700 mt-1"
@@ -156,13 +158,13 @@ const AccountRejectedScreen = ({ navigation }) => {
                   className="text-sm font-medium text-blue-900"
                   style={{ fontFamily: 'Poppins-Medium' }}
                 >
-                  What can I do?
+                  {t('accountRejected.whatCanIDo')}
                 </Text>
                 <Text
                   className="text-sm text-blue-700 mt-1"
                   style={{ fontFamily: 'Poppins-Regular' }}
                 >
-                  Update your profile information and documents, then reapply for approval. You must make at least one change before resubmitting.
+                  {t('accountRejected.whatCanIDoDesc')}
                 </Text>
               </View>
             </View>
@@ -174,14 +176,14 @@ const AccountRejectedScreen = ({ navigation }) => {
               className="text-sm font-medium text-gray-700 mb-3"
               style={{ fontFamily: 'Poppins-Medium' }}
             >
-              Tips for Reapplication
+              {t('accountRejected.tipsTitle')}
             </Text>
 
             {[
-              'Ensure your ID photos are clear and readable',
-              'Double-check all personal information',
-              'Add relevant services with competitive pricing',
-              'Select appropriate coverage zones',
+              t('accountRejected.tip1'),
+              t('accountRejected.tip2'),
+              t('accountRejected.tip3'),
+              t('accountRejected.tip4'),
             ].map((tip, index) => (
               <View key={index} className="flex-row items-start mb-2">
                 <Ionicons name="checkmark" size={18} color={COLORS.success} />
@@ -207,7 +209,7 @@ const AccountRejectedScreen = ({ navigation }) => {
                 className={`ml-2 ${hasChanges ? 'text-green-700' : 'text-yellow-700'}`}
                 style={{ fontFamily: 'Poppins-Medium', fontSize: 13 }}
               >
-                {hasChanges ? 'Changes detected - ready to resubmit' : 'Please make changes before resubmitting'}
+                {hasChanges ? t('accountRejected.changesDetected') : t('accountRejected.makeChanges')}
               </Text>
             </View>
           )}
@@ -216,7 +218,7 @@ const AccountRejectedScreen = ({ navigation }) => {
         {/* Bottom Buttons */}
         <View className="px-6 pb-6">
           <Button
-            title="Update Profile"
+            title={t('accountRejected.updateProfile')}
             onPress={handleUpdateProfile}
             variant="secondary"
             icon={<Ionicons name="create-outline" size={20} color={COLORS.primary} />}
@@ -225,7 +227,7 @@ const AccountRejectedScreen = ({ navigation }) => {
           <View className="h-3" />
 
           <Button
-            title="Submit for Review Again"
+            title={t('accountRejected.submitForReview')}
             onPress={handleReapply}
             loading={reapplying}
             disabled={!hasChanges || checking}
@@ -237,7 +239,7 @@ const AccountRejectedScreen = ({ navigation }) => {
               className="text-gray-500 font-medium"
               style={{ fontFamily: 'Poppins-Medium' }}
             >
-              Logout
+              {t('common.logout')}
             </Text>
           </TouchableOpacity>
         </View>

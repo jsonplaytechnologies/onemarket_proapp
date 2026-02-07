@@ -14,6 +14,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import Button from '../../common/Button';
 
 // Time window constants (should match backend)
@@ -21,6 +22,7 @@ const ON_THE_WAY_WINDOW_BEFORE = 60; // minutes
 const ON_THE_WAY_WINDOW_AFTER = 60;  // minutes
 
 const PaidActions = ({ actionLoading, onPress, booking }) => {
+  const { t } = useTranslation();
   const [timeState, setTimeState] = useState({
     status: 'loading', // 'loading' | 'too_early' | 'available' | 'too_late'
     hoursUntil: 0,
@@ -87,7 +89,7 @@ const PaidActions = ({ actionLoading, onPress, booking }) => {
   if (timeState.status === 'loading') {
     return (
       <Button
-        title="I'm On The Way"
+        title={t('actionButtons.imOnTheWay')}
         onPress={onPress}
         loading={true}
         disabled={true}
@@ -123,7 +125,7 @@ const PaidActions = ({ actionLoading, onPress, booking }) => {
                 className={textColor}
                 style={{ fontFamily: 'Poppins-Medium', fontSize: 13 }}
               >
-                Available in
+                {t('actionButtons.availableIn')}
               </Text>
               <Text
                 className={textColor}
@@ -135,7 +137,7 @@ const PaidActions = ({ actionLoading, onPress, booking }) => {
                 className={`${textColor} mt-1 opacity-80`}
                 style={{ fontFamily: 'Poppins-Regular', fontSize: 11 }}
               >
-                Scheduled for {scheduledTime}
+                {t('actionButtons.scheduledFor', { time: scheduledTime })}
               </Text>
             </View>
             {isCloseToAvailable && (
@@ -144,14 +146,14 @@ const PaidActions = ({ actionLoading, onPress, booking }) => {
                   className="text-blue-600"
                   style={{ fontFamily: 'Poppins-SemiBold', fontSize: 11 }}
                 >
-                  SOON
+                  {t('actionButtons.soon')}
                 </Text>
               </View>
             )}
           </View>
         </View>
         <Button
-          title="I'm On The Way"
+          title={t('actionButtons.imOnTheWay')}
           onPress={() => {}}
           disabled={true}
           icon={<Ionicons name="navigate-outline" size={20} color="#999999" />}
@@ -172,19 +174,19 @@ const PaidActions = ({ actionLoading, onPress, booking }) => {
                 className="text-red-800"
                 style={{ fontFamily: 'Poppins-Medium', fontSize: 13 }}
               >
-                Time Window Closed
+                {t('actionButtons.timeWindowClosed')}
               </Text>
               <Text
                 className="text-red-600 mt-1"
                 style={{ fontFamily: 'Poppins-Regular', fontSize: 12 }}
               >
-                The scheduled service time has passed. This booking may be auto-cancelled soon.
+                {t('actionButtons.timeWindowClosedDesc')}
               </Text>
             </View>
           </View>
         </View>
         <Button
-          title="I'm On The Way"
+          title={t('actionButtons.imOnTheWay')}
           onPress={() => {}}
           disabled={true}
           icon={<Ionicons name="navigate-outline" size={20} color="#999999" />}
@@ -196,7 +198,7 @@ const PaidActions = ({ actionLoading, onPress, booking }) => {
   // Available: show normal button
   return (
     <Button
-      title="I'm On The Way"
+      title={t('actionButtons.imOnTheWay')}
       onPress={onPress}
       loading={actionLoading}
       icon={<Ionicons name="navigate-outline" size={20} color="#FFFFFF" />}

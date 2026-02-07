@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "896791899768",
+    "project_id": "onemarket-eba83",
+    "storage_bucket": "onemarket-eba83.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:896791899768:android:c198a14a753bd8e451478d",
+        "android_client_info": {
+          "package_name": "com.onemarket.pro"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAxM2DGhyio1lN8xF3pLKbudKOsFAc8UYE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:896791899768:android:7a4c9d66d06ecccd51478d",
+        "android_client_info": {
+          "package_name": "com.onemarket.user"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAxM2DGhyio1lN8xF3pLKbudKOsFAc8UYE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

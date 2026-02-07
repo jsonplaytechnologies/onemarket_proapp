@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { useIncentive } from '../../context/IncentiveContext';
 import { COLORS } from '../../constants/colors';
 import {
@@ -19,6 +20,7 @@ import {
 } from '../../components/incentives';
 
 const ReferralsScreen = ({ navigation }) => {
+  const { t } = useTranslation();
   const {
     referralCode,
     referralStats,
@@ -90,7 +92,7 @@ const ReferralsScreen = ({ navigation }) => {
             className="text-gray-900"
             style={{ fontFamily: 'Poppins-Bold', fontSize: 24 }}
           >
-            Referrals
+            {t('referrals.title')}
           </Text>
         </View>
 
@@ -118,7 +120,7 @@ const ReferralsScreen = ({ navigation }) => {
                 className="text-gray-500"
                 style={{ fontFamily: 'Poppins-Regular', fontSize: 11 }}
               >
-                Total
+                {t('referrals.total')}
               </Text>
             </View>
             <View className="flex-1 items-center py-2 border-r border-gray-200">
@@ -132,7 +134,7 @@ const ReferralsScreen = ({ navigation }) => {
                 className="text-gray-500"
                 style={{ fontFamily: 'Poppins-Regular', fontSize: 11 }}
               >
-                Pending
+                {t('referrals.pending')}
               </Text>
             </View>
             <View className="flex-1 items-center py-2 border-r border-gray-200">
@@ -146,7 +148,7 @@ const ReferralsScreen = ({ navigation }) => {
                 className="text-gray-500"
                 style={{ fontFamily: 'Poppins-Regular', fontSize: 11 }}
               >
-                Qualified
+                {t('referrals.qualified')}
               </Text>
             </View>
             <View className="flex-1 items-center py-2">
@@ -160,7 +162,7 @@ const ReferralsScreen = ({ navigation }) => {
                 className="text-gray-500"
                 style={{ fontFamily: 'Poppins-Regular', fontSize: 11 }}
               >
-                Rewarded
+                {t('referrals.rewarded')}
               </Text>
             </View>
           </View>
@@ -171,7 +173,7 @@ const ReferralsScreen = ({ navigation }) => {
                 className="text-gray-600"
                 style={{ fontFamily: 'Poppins-Medium', fontSize: 14 }}
               >
-                Total Earned
+                {t('referrals.totalEarned')}
               </Text>
               <Text
                 className="text-green-600"
@@ -190,7 +192,7 @@ const ReferralsScreen = ({ navigation }) => {
           className="text-gray-900"
           style={{ fontFamily: 'Poppins-SemiBold', fontSize: 18 }}
         >
-          Your Referrals
+          {t('referrals.yourReferrals')}
         </Text>
       </View>
     </>
@@ -205,13 +207,13 @@ const ReferralsScreen = ({ navigation }) => {
         className="text-gray-700 mb-2"
         style={{ fontFamily: 'Poppins-SemiBold', fontSize: 16 }}
       >
-        No Referrals Yet
+        {t('referrals.noReferralsYet')}
       </Text>
       <Text
         className="text-gray-400 text-center mb-6"
         style={{ fontFamily: 'Poppins-Regular', fontSize: 14 }}
       >
-        Share your referral code with other providers to start earning rewards
+        {t('referrals.noReferralsDesc')}
       </Text>
       <TouchableOpacity
         onPress={shareReferralCode}
@@ -223,7 +225,7 @@ const ReferralsScreen = ({ navigation }) => {
           className="text-white ml-2"
           style={{ fontFamily: 'Poppins-Medium', fontSize: 14 }}
         >
-          Share Your Code
+          {t('referrals.shareYourCode')}
         </Text>
       </TouchableOpacity>
     </View>

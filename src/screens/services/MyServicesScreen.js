@@ -14,12 +14,14 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import apiService from '../../services/api';
 import { API_ENDPOINTS } from '../../constants/api';
 import { COLORS } from '../../constants/colors';
 import Button from '../../components/common/Button';
 
 const MyServicesScreen = ({ navigation }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [allServices, setAllServices] = useState([]);
@@ -70,9 +72,9 @@ const MyServicesScreen = ({ navigation }) => {
 
   const handleServicePress = (service) => {
     if (isServiceAdded(service.id)) {
-      Alert.alert(service.name || service.service_name, 'What would you like to do?', [
+      Alert.alert(service.name || service.service_name, t('myServices.whatToDo'), [
         {
-          text: 'Update Price',
+          text: t('myServices.updatePrice'),
           onPress: () => {
             setSelectedService(service);
             const myService = getMyService(service.id || service.service_id);
@@ -81,11 +83,11 @@ const MyServicesScreen = ({ navigation }) => {
           },
         },
         {
-          text: 'Remove',
+          text: t('common.remove'),
           style: 'destructive',
           onPress: () => handleRemoveService(service),
         },
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
       ]);
     } else {
       setSelectedService(service);
@@ -118,7 +120,7 @@ const MyServicesScreen = ({ navigation }) => {
       setCustomPrice('');
       fetchData();
     } catch (error) {
-      Alert.alert('Error', error.message || 'Failed to save service');
+      Alert.alert(t('common.error'), error.message || t('addServices.failedToSave'));
     } finally {
       setSaving(false);
     }
@@ -133,7 +135,7 @@ const MyServicesScreen = ({ navigation }) => {
       await apiService.delete(API_ENDPOINTS.MY_SERVICE(myService.id));
       fetchData();
     } catch (error) {
-      Alert.alert('Error', error.message || 'Failed to remove service');
+      Alert.alert(t('common.error'), error.message || t('addServices.failedToRemove'));
     }
   };
 
@@ -170,13 +172,13 @@ const MyServicesScreen = ({ navigation }) => {
               className="text-xl font-bold text-gray-900"
               style={{ fontFamily: 'Poppins-Bold' }}
             >
-              My Services
+              {t('myServices.title')}
             </Text>
             <Text
               className="text-sm text-gray-500"
               style={{ fontFamily: 'Poppins-Regular' }}
             >
-              {myServices.length} service{myServices.length !== 1 ? 's' : ''} active
+              {myServices.length !== 1 ? t('myServices.servicesActivePlural', { count: myServices.length }) : t('myServices.servicesActive', { count: myServices.length })}
             </Text>
           </View>
         </View>
@@ -199,7 +201,7 @@ const MyServicesScreen = ({ navigation }) => {
                 className="text-sm font-medium text-gray-500 mb-2"
                 style={{ fontFamily: 'Poppins-Medium' }}
               >
-                YOUR ACTIVE SERVICES
+                {t('myServices.yourActiveServices')}
               </Text>
               <View className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                 {myServices.map((service, index) => (
@@ -281,7 +283,7 @@ const MyServicesScreen = ({ navigation }) => {
                         className="text-sm text-gray-500"
                         style={{ fontFamily: 'Poppins-Regular' }}
                       >
-                        Base: {service.base_price?.toLocaleString()} XAF
+                        {t('myServices.base', { price: service.base_price?.toLocaleString() })}
                       </Text>
                     </View>
                     <Ionicons
@@ -316,7 +318,7 @@ const MyServicesScreen = ({ navigation }) => {
                 className="text-xl font-bold text-gray-900"
                 style={{ fontFamily: 'Poppins-Bold' }}
               >
-                Set Your Price
+                {t('myServices.setYourPrice')}
               </Text>
               <TouchableOpacity onPress={() => setShowPriceModal(false)}>
                 <Ionicons name="close" size={24} color={COLORS.textSecondary} />
@@ -334,7 +336,7 @@ const MyServicesScreen = ({ navigation }) => {
               className="text-sm text-gray-500 mb-4"
               style={{ fontFamily: 'Poppins-Regular' }}
             >
-              Base price: {selectedService?.base_price?.toLocaleString()} XAF
+              {t('myServices.basePrice', { price: selectedService?.base_price?.toLocaleString() })}
             </Text>
 
             <View className="flex-row items-center border border-gray-300 rounded-xl px-4 py-3 mb-6">
@@ -355,7 +357,7 @@ const MyServicesScreen = ({ navigation }) => {
             </View>
 
             <Button
-              title={isServiceAdded(selectedService?.id) ? 'Update Price' : 'Add Service'}
+              title={isServiceAdded(selectedService?.id) ? t('myServices.updatePrice') : t('myServices.addService')}
               onPress={handleAddService}
               disabled={!customPrice}
               loading={saving}

@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useTranslation } from 'react-i18next';
 import apiService from '../../services/api';
 import { API_ENDPOINTS } from '../../constants/api';
 import { COLORS } from '../../constants/colors';
@@ -38,6 +39,7 @@ const PRE_BUFFER_HOURS = 2;
 const POST_BUFFER_HOURS = 2;
 
 const MyScheduleScreen = ({ navigation }) => {
+  const { t } = useTranslation();
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -105,9 +107,9 @@ const MyScheduleScreen = ({ navigation }) => {
     dateOnly.setHours(0, 0, 0, 0);
 
     if (dateOnly.getTime() === now.getTime()) {
-      return 'Today';
+      return t('schedule.today');
     } else if (dateOnly.getTime() === tomorrow.getTime()) {
-      return 'Tomorrow';
+      return t('schedule.tomorrow');
     }
     return date.toLocaleDateString('en-US', {
       weekday: 'short',
@@ -264,17 +266,17 @@ const MyScheduleScreen = ({ navigation }) => {
   const getSlotLabel = (status) => {
     switch (status) {
       case 'job':
-        return 'BOOKED';
+        return t('schedule.booked');
       case 'pre-buffer':
-        return 'BUFFER';
+        return t('schedule.buffer');
       case 'post-buffer':
-        return 'BUFFER';
+        return t('schedule.buffer');
       case 'available':
-        return 'FREE';
+        return t('schedule.free');
       case 'past':
-        return 'PAST';
+        return t('schedule.past');
       default:
-        return 'OFF';
+        return t('schedule.off');
     }
   };
 
@@ -305,13 +307,13 @@ const MyScheduleScreen = ({ navigation }) => {
               className="text-xl font-bold text-gray-900"
               style={{ fontFamily: 'Poppins-Bold' }}
             >
-              My Schedule
+              {t('schedule.title')}
             </Text>
             <Text
               className="text-sm text-gray-500"
               style={{ fontFamily: 'Poppins-Regular' }}
             >
-              View your booked appointments
+              {t('schedule.subtitle')}
             </Text>
           </View>
         </View>
@@ -369,7 +371,7 @@ const MyScheduleScreen = ({ navigation }) => {
           <View className="flex-row mt-4 space-x-2">
             <TouchableOpacity
               className={`flex-1 py-2 rounded-lg items-center ${
-                formatDate(selectedDate) === 'Today' ? 'bg-blue-100' : 'bg-gray-100'
+                formatDate(selectedDate) === t('schedule.today') ? 'bg-blue-100' : 'bg-gray-100'
               }`}
               onPress={() => setSelectedDate(new Date())}
             >
@@ -377,15 +379,15 @@ const MyScheduleScreen = ({ navigation }) => {
                 style={{
                   fontFamily: 'Poppins-Medium',
                   fontSize: 13,
-                  color: formatDate(selectedDate) === 'Today' ? COLORS.primary : '#6B7280',
+                  color: formatDate(selectedDate) === t('schedule.today') ? COLORS.primary : '#6B7280',
                 }}
               >
-                Today
+                {t('schedule.today')}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               className={`flex-1 py-2 rounded-lg items-center ${
-                formatDate(selectedDate) === 'Tomorrow' ? 'bg-blue-100' : 'bg-gray-100'
+                formatDate(selectedDate) === t('schedule.tomorrow') ? 'bg-blue-100' : 'bg-gray-100'
               }`}
               onPress={() => {
                 const tomorrow = new Date();
@@ -397,10 +399,10 @@ const MyScheduleScreen = ({ navigation }) => {
                 style={{
                   fontFamily: 'Poppins-Medium',
                   fontSize: 13,
-                  color: formatDate(selectedDate) === 'Tomorrow' ? COLORS.primary : '#6B7280',
+                  color: formatDate(selectedDate) === t('schedule.tomorrow') ? COLORS.primary : '#6B7280',
                 }}
               >
-                Tomorrow
+                {t('schedule.tomorrow')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -421,25 +423,25 @@ const MyScheduleScreen = ({ navigation }) => {
           <View className="flex-row items-center mr-4">
             <View className="w-3 h-3 rounded bg-red-200 mr-1" />
             <Text className="text-xs text-gray-600" style={{ fontFamily: 'Poppins-Regular' }}>
-              Booked
+              {t('schedule.booked')}
             </Text>
           </View>
           <View className="flex-row items-center mr-4">
             <View className="w-3 h-3 rounded bg-yellow-200 mr-1" />
             <Text className="text-xs text-gray-600" style={{ fontFamily: 'Poppins-Regular' }}>
-              Buffer
+              {t('schedule.buffer')}
             </Text>
           </View>
           <View className="flex-row items-center mr-4">
             <View className="w-3 h-3 rounded bg-green-200 mr-1" />
             <Text className="text-xs text-gray-600" style={{ fontFamily: 'Poppins-Regular' }}>
-              Available
+              {t('schedule.free')}
             </Text>
           </View>
           <View className="flex-row items-center">
             <View className="w-3 h-3 rounded bg-gray-200 mr-1" />
             <Text className="text-xs text-gray-600" style={{ fontFamily: 'Poppins-Regular' }}>
-              Off
+              {t('schedule.off')}
             </Text>
           </View>
         </View>
@@ -453,7 +455,7 @@ const MyScheduleScreen = ({ navigation }) => {
                 className="text-gray-500 mt-2"
                 style={{ fontFamily: 'Poppins-Regular', fontSize: 13 }}
               >
-                Loading schedule...
+                {t('schedule.loadingSchedule')}
               </Text>
             </View>
           ) : (
@@ -512,7 +514,7 @@ const MyScheduleScreen = ({ navigation }) => {
               className="text-gray-900 mb-3"
               style={{ fontFamily: 'Poppins-SemiBold', fontSize: 16 }}
             >
-              Appointments ({activeBookings.length})
+              {t('schedule.appointments', { count: activeBookings.length })}
             </Text>
 
             {activeBookings.map((booking) => {
@@ -593,7 +595,7 @@ const MyScheduleScreen = ({ navigation }) => {
               className="text-gray-500 text-center"
               style={{ fontFamily: 'Poppins-Regular', fontSize: 14 }}
             >
-              No appointments scheduled for this day
+              {t('schedule.noAppointments')}
             </Text>
           </View>
         )}

@@ -4,12 +4,13 @@
  */
 
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef, useMemo } from 'react';
-import { Vibration } from 'react-native';
+import { Vibration, Platform } from 'react-native';
 import { useSocketContext } from './SocketContext';
 import { useAuth } from './AuthContext';
 import apiService from '../services/api';
 import { API_ENDPOINTS } from '../constants/api';
 import cacheManager, { CACHE_KEYS, CACHE_TYPES } from '../utils/cacheManager';
+import { registerForPushNotifications } from '../services/pushNotificationService';
 
 // Debounce utility
 const debounce = (func, wait) => {
@@ -42,6 +43,7 @@ export const NotificationProvider = ({ children }) => {
 
   const soundRef = useRef(null);
   const toastTimeoutRef = useRef(null);
+  const pushTokenRef = useRef(null);
 
   // Load notification sound (if expo-av available)
   useEffect(() => {
@@ -248,12 +250,53 @@ export const NotificationProvider = ({ children }) => {
     }
   }, []);
 
-  // Initial fetch on auth (only if account is approved)
+  // Clear all notifications (delete from server)
+  const clearAllNotifications = useCallback(async () => {
+    try {
+      await apiService.delete(API_ENDPOINTS.NOTIFICATIONS);
+      setNotifications([]);
+      setUnreadCount(0);
+      cacheManager.invalidate(CACHE_KEYS.NOTIFICATIONS);
+      cacheManager.invalidate(CACHE_KEYS.UNREAD_COUNT);
+    } catch (error) {
+      console.error('Error clearing notifications:', error);
+    }
+  }, []);
+
+  // Initial fetch on auth (only if account is approved) + push token registration
   useEffect(() => {
     if (isAuthenticated && user?.approval_status === 'approved') {
       // Single call to fetch all unread counts
       fetchAllUnreadCounts();
+
+      // Register for push notifications
+      registerForPushNotifications()
+        .then(async (token) => {
+          if (token) {
+            pushTokenRef.current = token;
+            try {
+              await apiService.post(API_ENDPOINTS.DEVICE_TOKENS_REGISTER, {
+                token,
+                platform: Platform.OS,
+                appType: 'proapp',
+              });
+              console.log('[ProApp] Push token registered successfully');
+            } catch (err) {
+              console.error('[ProApp] Failed to register push token:', err);
+            }
+          }
+        })
+        .catch(err => console.error('[ProApp] Push notification registration error:', err));
     } else {
+      // Deactivate push token on logout (best-effort; auth token is
+      // already cleared so this will likely 401 — that's fine)
+      if (pushTokenRef.current) {
+        apiService.delete(API_ENDPOINTS.DEVICE_TOKENS_REMOVE, {
+          body: JSON.stringify({ token: pushTokenRef.current }),
+        }).catch(() => {});
+        pushTokenRef.current = null;
+      }
+
       setNotifications([]);
       setUnreadCount(0);
       setUnreadChatsCount(0);
@@ -470,6 +513,7 @@ export const NotificationProvider = ({ children }) => {
     fetchAllUnreadCounts,
     markAsRead,
     markAllAsRead,
+    clearAllNotifications,
     showToast,
     hideToast,
     triggerRefresh,

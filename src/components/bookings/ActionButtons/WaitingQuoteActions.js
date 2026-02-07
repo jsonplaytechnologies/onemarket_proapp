@@ -6,6 +6,7 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import Button from '../../common/Button';
 import { CustomerAnswersCard } from '../index';
 import { COLORS } from '../../../constants/colors';
@@ -19,11 +20,13 @@ const WaitingQuoteActions = ({
   navigation,
   onSendQuote,
 }) => {
+  const { t } = useTranslation();
+
   if (isTimedOut) {
     return (
       <TimeoutMessage
-        title="Quote Time Expired"
-        message="You did not send a quote in time. This booking is no longer available."
+        title={t('actionButtons.quoteTimeExpired')}
+        message={t('actionButtons.quoteTimeExpiredDesc')}
       />
     );
   }
@@ -40,8 +43,7 @@ const WaitingQuoteActions = ({
             className="text-blue-800 ml-3 flex-1"
             style={{ fontFamily: 'Poppins-Regular', fontSize: 13 }}
           >
-            Discuss the job scope and price with the customer in chat before sending your quote.
-            You can only send one quote - make it count!
+            {t('actionButtons.chatGuidance')}
           </Text>
         </View>
       </View>
@@ -50,7 +52,7 @@ const WaitingQuoteActions = ({
       <View className="flex-row space-x-3">
         <View className="flex-1 mr-2">
           <Button
-            title="Chat"
+            title={t('actionButtons.chat')}
             onPress={() => navigation.navigate('Chat', { bookingId, booking })}
             variant="secondary"
             icon={<Ionicons name="chatbubble-outline" size={20} color={COLORS.primary} />}
@@ -58,7 +60,7 @@ const WaitingQuoteActions = ({
         </View>
         <View className="flex-1">
           <Button
-            title="Send Quote"
+            title={t('actionButtons.sendQuote')}
             onPress={onSendQuote}
             icon={<Ionicons name="document-text-outline" size={20} color="#FFFFFF" />}
           />

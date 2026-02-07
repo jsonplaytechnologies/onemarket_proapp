@@ -15,6 +15,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { useTranslation } from 'react-i18next';
 import apiService from '../../services/api';
 import { API_ENDPOINTS, API_BASE_URL } from '../../constants/api';
 import { COLORS } from '../../constants/colors';
@@ -24,6 +25,7 @@ import { useBookingSocket } from '../../hooks/useSocket';
 const { width: screenWidth } = Dimensions.get('window');
 
 const ChatScreen = ({ navigation, route }) => {
+  const { t } = useTranslation();
   const { bookingId, booking = {} } = route.params || {};
   const { user, token } = useAuth();
 
@@ -99,7 +101,7 @@ const ChatScreen = ({ navigation, route }) => {
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      alert('Sorry, we need camera roll permissions to send images.');
+      alert(t('permissions.cameraRollPermission'));
       return;
     }
 
@@ -117,7 +119,7 @@ const ChatScreen = ({ navigation, route }) => {
   const takePhoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
-      alert('Sorry, we need camera permissions to take photos.');
+      alert(t('permissions.cameraPermission'));
       return;
     }
 
@@ -167,11 +169,11 @@ const ChatScreen = ({ navigation, route }) => {
         }
         flatListRef.current?.scrollToEnd({ animated: true });
       } else {
-        alert(data.message || 'Failed to send image');
+        alert(data.message || t('chat.failedToSendImage'));
       }
     } catch (error) {
       console.error('Error sending image:', error);
-      alert('Failed to send image. Please try again.');
+      alert(t('chat.failedToSendImageRetry'));
     } finally {
       setUploadingImage(false);
     }
@@ -258,7 +260,7 @@ const ChatScreen = ({ navigation, route }) => {
                   style={{ fontFamily: 'Poppins-Regular' }}
                 >
                   {formatTime(item.created_at || item.createdAt)}
-                  {isMine && (item.is_read || item.isRead) && ' ✓✓'}
+                  {isMine && (item.is_read || item.isRead) && ' \u2713\u2713'}
                 </Text>
               </View>
             </View>
@@ -284,7 +286,7 @@ const ChatScreen = ({ navigation, route }) => {
             >
               {formatTime(item.created_at || item.createdAt)}
               {isMine && (item.is_read || item.isRead) && (
-                <Text> ✓✓</Text>
+                <Text> {'\u2713\u2713'}</Text>
               )}
             </Text>
           </View>
@@ -345,7 +347,7 @@ const ChatScreen = ({ navigation, route }) => {
               className="text-xs text-green-600"
               style={{ fontFamily: 'Poppins-Regular' }}
             >
-              Online
+              {t('chat.online')}
             </Text>
           </View>
         )}
@@ -381,7 +383,7 @@ const ChatScreen = ({ navigation, route }) => {
                 className="text-gray-500 mt-2"
                 style={{ fontFamily: 'Poppins-Regular' }}
               >
-                No messages yet
+                {t('chat.noMessages')}
               </Text>
             </View>
           }
@@ -394,7 +396,7 @@ const ChatScreen = ({ navigation, route }) => {
               className="text-sm text-gray-500"
               style={{ fontFamily: 'Poppins-Regular' }}
             >
-              {userName} is typing...
+              {t('chat.isTyping', { name: userName })}
             </Text>
           </View>
         )}
@@ -407,7 +409,7 @@ const ChatScreen = ({ navigation, route }) => {
               className="text-sm text-gray-500 ml-2"
               style={{ fontFamily: 'Poppins-Regular' }}
             >
-              Sending image...
+              {t('chat.sendingImage')}
             </Text>
           </View>
         )}
@@ -438,7 +440,7 @@ const ChatScreen = ({ navigation, route }) => {
             <TextInput
               className="flex-1 text-base max-h-24"
               style={{ fontFamily: 'Poppins-Regular' }}
-              placeholder="Type a message..."
+              placeholder={t('chat.typeMessage')}
               placeholderTextColor="#9CA3AF"
               value={message}
               onChangeText={handleTyping}

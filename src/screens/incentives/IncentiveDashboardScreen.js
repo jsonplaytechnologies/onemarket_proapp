@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { useIncentive } from '../../context/IncentiveContext';
 import { COLORS } from '../../constants/colors';
 import {
@@ -19,6 +20,7 @@ import {
 } from '../../components/incentives';
 
 const IncentiveDashboardScreen = ({ navigation }) => {
+  const { t } = useTranslation();
   const {
     referralCode,
     referralStats,
@@ -93,7 +95,7 @@ const IncentiveDashboardScreen = ({ navigation }) => {
               className="text-gray-900"
               style={{ fontFamily: 'Poppins-Bold', fontSize: 24 }}
             >
-              Incentives & Rewards
+              {t('incentives.title')}
             </Text>
           </View>
 
@@ -114,7 +116,7 @@ const IncentiveDashboardScreen = ({ navigation }) => {
               className="text-gray-900"
               style={{ fontFamily: 'Poppins-SemiBold', fontSize: 18 }}
             >
-              Referral Program
+              {t('incentives.referralProgram')}
             </Text>
             <TouchableOpacity
               onPress={() => navigation.navigate('Referrals')}
@@ -124,7 +126,7 @@ const IncentiveDashboardScreen = ({ navigation }) => {
                 className="text-primary mr-1"
                 style={{ fontFamily: 'Poppins-Medium', fontSize: 14 }}
               >
-                View All
+                {t('incentives.viewAll')}
               </Text>
               <Ionicons name="chevron-forward" size={16} color={COLORS.primary} />
             </TouchableOpacity>
@@ -145,7 +147,7 @@ const IncentiveDashboardScreen = ({ navigation }) => {
               className="text-gray-900 mb-3"
               style={{ fontFamily: 'Poppins-SemiBold', fontSize: 18 }}
             >
-              Signup Bonus
+              {t('incentives.signupBonus')}
             </Text>
             <SignupBonusCard
               status={signupBonus?.status}
@@ -167,7 +169,7 @@ const IncentiveDashboardScreen = ({ navigation }) => {
             className="text-gray-900 mb-3"
             style={{ fontFamily: 'Poppins-SemiBold', fontSize: 18 }}
           >
-            Quick Stats
+            {t('incentives.quickStats')}
           </Text>
 
           <View className="bg-gray-50 rounded-2xl p-4">
@@ -183,7 +185,7 @@ const IncentiveDashboardScreen = ({ navigation }) => {
                   className="text-gray-500"
                   style={{ fontFamily: 'Poppins-Regular', fontSize: 12 }}
                 >
-                  Total Referrals
+                  {t('incentives.totalReferrals')}
                 </Text>
               </View>
               <View className="w-px bg-gray-200" />
@@ -198,7 +200,7 @@ const IncentiveDashboardScreen = ({ navigation }) => {
                   className="text-gray-500"
                   style={{ fontFamily: 'Poppins-Regular', fontSize: 12 }}
                 >
-                  Pending
+                  {t('incentives.pending')}
                 </Text>
               </View>
               <View className="w-px bg-gray-200" />
@@ -213,7 +215,7 @@ const IncentiveDashboardScreen = ({ navigation }) => {
                   className="text-gray-500"
                   style={{ fontFamily: 'Poppins-Regular', fontSize: 12 }}
                 >
-                  Rewarded
+                  {t('incentives.rewarded')}
                 </Text>
               </View>
             </View>
@@ -226,30 +228,30 @@ const IncentiveDashboardScreen = ({ navigation }) => {
             className="text-gray-900 mb-3"
             style={{ fontFamily: 'Poppins-SemiBold', fontSize: 18 }}
           >
-            How It Works
+            {t('incentives.howItWorks')}
           </Text>
 
           <View className="bg-blue-50 rounded-2xl p-4">
             {[
               {
                 icon: 'share-outline',
-                title: 'Share Your Code',
-                description: 'Share your referral code with other providers',
+                title: t('incentives.shareYourCode'),
+                description: t('incentives.shareYourCodeDesc'),
               },
               {
                 icon: 'person-add-outline',
-                title: 'They Sign Up',
-                description: 'They join using your code during registration',
+                title: t('incentives.theySignUp'),
+                description: t('incentives.theySignUpDesc'),
               },
               {
                 icon: 'briefcase-outline',
-                title: 'They Get Qualified',
-                description: 'Complete 5 jobs with 4.0+ rating within 60 days',
+                title: t('incentives.theyGetQualified'),
+                description: t('incentives.theyGetQualifiedDesc'),
               },
               {
                 icon: 'gift-outline',
-                title: 'Both Earn Rewards',
-                description: 'You both receive 300 XAF when qualified',
+                title: t('incentives.bothEarnRewards'),
+                description: t('incentives.bothEarnRewardsDesc'),
               },
             ].map((step, index) => (
               <View

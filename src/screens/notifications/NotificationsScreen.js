@@ -6,9 +6,11 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
+  Alert,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import apiService from '../../services/api';
 import { API_ENDPOINTS } from '../../constants/api';
 import { COLORS } from '../../constants/colors';
@@ -77,10 +79,29 @@ const NOTIFICATION_COLORS = {
 };
 
 const NotificationsScreen = ({ navigation }) => {
+  const { t } = useTranslation();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const { markAsRead, markAllAsRead } = useNotifications();
+  const { markAsRead, markAllAsRead, clearAllNotifications } = useNotifications();
+
+  const handleClearAll = () => {
+    Alert.alert(
+      t('notifications.clearAll'),
+      t('notifications.clearAllConfirm'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('notifications.clearAll'),
+          style: 'destructive',
+          onPress: async () => {
+            await clearAllNotifications();
+            setNotifications([]);
+          },
+        },
+      ]
+    );
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -140,7 +161,7 @@ const NotificationsScreen = ({ navigation }) => {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return 'Now';
+    if (diffMins < 1) return t('notifications.now');
     if (diffMins < 60) return `${diffMins}m`;
     if (diffHours < 24) return `${diffHours}h`;
     if (diffDays < 7) return `${diffDays}d`;
@@ -220,13 +241,13 @@ const NotificationsScreen = ({ navigation }) => {
         className="text-lg text-gray-900"
         style={{ fontFamily: 'Poppins-SemiBold' }}
       >
-        All Caught Up
+        {t('notifications.allCaughtUp')}
       </Text>
       <Text
         className="text-sm text-gray-400 text-center mt-2"
         style={{ fontFamily: 'Poppins-Regular' }}
       >
-        New notifications will appear here
+        {t('notifications.newNotificationsAppear')}
       </Text>
     </View>
   );
@@ -239,7 +260,7 @@ const NotificationsScreen = ({ navigation }) => {
             className="text-2xl text-gray-900"
             style={{ fontFamily: 'Poppins-Bold' }}
           >
-            Notifications
+            {t('notifications.title')}
           </Text>
         </View>
         <View className="flex-1 items-center justify-center">
@@ -252,13 +273,23 @@ const NotificationsScreen = ({ navigation }) => {
   return (
     <View className="flex-1 bg-white">
       {/* Header */}
-      <View className="px-6 pt-14 pb-4">
+      <View className="px-6 pt-14 pb-4 flex-row items-center justify-between">
         <Text
           className="text-2xl text-gray-900"
           style={{ fontFamily: 'Poppins-Bold' }}
         >
-          Notifications
+          {t('notifications.title')}
         </Text>
+        {notifications.length > 0 && (
+          <TouchableOpacity onPress={handleClearAll}>
+            <Text
+              className="text-sm text-red-500"
+              style={{ fontFamily: 'Poppins-Medium' }}
+            >
+              {t('notifications.clearAll')}
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Notifications List */}

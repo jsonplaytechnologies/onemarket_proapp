@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/common/Button';
 import { COLORS } from '../../constants/colors';
 
 const PendingApprovalScreen = ({ navigation }) => {
+  const { t } = useTranslation();
   const { user, logout, fetchUserProfile } = useAuth();
   const [checking, setChecking] = useState(false);
 
@@ -31,13 +33,13 @@ const PendingApprovalScreen = ({ navigation }) => {
       } else {
         // Still pending
         Alert.alert(
-          'Status Update',
-          'Your application is still under review. Please check back later.',
-          [{ text: 'OK' }]
+          t('pendingApproval.statusUpdate'),
+          t('pendingApproval.stillUnderReview'),
+          [{ text: t('common.ok') }]
         );
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to check status. Please try again.');
+      Alert.alert(t('common.error'), t('pendingApproval.failedToCheck'));
     } finally {
       setChecking(false);
     }
@@ -61,7 +63,7 @@ const PendingApprovalScreen = ({ navigation }) => {
             className="text-2xl font-bold text-gray-900 text-center mb-2"
             style={{ fontFamily: 'Poppins-Bold' }}
           >
-            Pending Approval
+            {t('pendingApproval.title')}
           </Text>
 
           {/* Description */}
@@ -69,7 +71,7 @@ const PendingApprovalScreen = ({ navigation }) => {
             className="text-base text-gray-500 text-center mb-8"
             style={{ fontFamily: 'Poppins-Regular' }}
           >
-            Your account is currently under review. We'll notify you once your account is approved.
+            {t('pendingApproval.description')}
           </Text>
 
           {/* Info Card */}
@@ -81,13 +83,13 @@ const PendingApprovalScreen = ({ navigation }) => {
                   className="text-sm font-medium text-blue-900"
                   style={{ fontFamily: 'Poppins-Medium' }}
                 >
-                  What happens next?
+                  {t('pendingApproval.whatHappensNext')}
                 </Text>
                 <Text
                   className="text-sm text-blue-700 mt-1"
                   style={{ fontFamily: 'Poppins-Regular' }}
                 >
-                  Our team will review your profile, documents, and services. This usually takes 1-2 business days. You'll receive a notification once approved.
+                  {t('pendingApproval.nextDescription')}
                 </Text>
               </View>
             </View>
@@ -99,14 +101,14 @@ const PendingApprovalScreen = ({ navigation }) => {
               className="text-sm font-medium text-gray-700 mb-3"
               style={{ fontFamily: 'Poppins-Medium' }}
             >
-              Submission Checklist
+              {t('pendingApproval.submissionChecklist')}
             </Text>
 
             {[
-              { label: 'ID Documents', status: 'submitted' },
-              { label: 'Services Added', status: 'submitted' },
-              { label: 'Coverage Zones', status: 'submitted' },
-              { label: 'Admin Review', status: 'pending' },
+              { label: t('pendingApproval.idDocuments'), status: 'submitted' },
+              { label: t('pendingApproval.servicesAdded'), status: 'submitted' },
+              { label: t('pendingApproval.coverageZones'), status: 'submitted' },
+              { label: t('pendingApproval.adminReview'), status: 'pending' },
             ].map((item, index) => (
               <View key={index} className="flex-row items-center mb-2">
                 <Ionicons
@@ -127,7 +129,7 @@ const PendingApprovalScreen = ({ navigation }) => {
                     className="text-xs text-yellow-600 ml-2"
                     style={{ fontFamily: 'Poppins-Medium' }}
                   >
-                    In Progress
+                    {t('pendingApproval.inProgress')}
                   </Text>
                 )}
               </View>
@@ -138,7 +140,7 @@ const PendingApprovalScreen = ({ navigation }) => {
         {/* Bottom Buttons */}
         <View className="px-6 pb-6">
           <Button
-            title={checking ? "Checking..." : "Check Status"}
+            title={checking ? t('pendingApproval.checking') : t('pendingApproval.checkStatus')}
             onPress={handleCheckStatus}
             loading={checking}
             icon={!checking && <Ionicons name="refresh-outline" size={20} color="#FFFFFF" />}
@@ -152,7 +154,7 @@ const PendingApprovalScreen = ({ navigation }) => {
               className="text-primary font-medium"
               style={{ fontFamily: 'Poppins-Medium' }}
             >
-              Edit Profile
+              {t('pendingApproval.editProfile')}
             </Text>
           </TouchableOpacity>
 
@@ -161,7 +163,7 @@ const PendingApprovalScreen = ({ navigation }) => {
               className="text-gray-500 font-medium"
               style={{ fontFamily: 'Poppins-Medium' }}
             >
-              Logout
+              {t('common.logout')}
             </Text>
           </TouchableOpacity>
         </View>

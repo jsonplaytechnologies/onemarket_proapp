@@ -14,12 +14,14 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import apiService from '../../services/api';
 import { API_ENDPOINTS } from '../../constants/api';
 import { COLORS } from '../../constants/colors';
 import Button from '../../components/common/Button';
 
 const WithdrawalsScreen = ({ navigation }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [withdrawals, setWithdrawals] = useState([]);
@@ -64,12 +66,12 @@ const WithdrawalsScreen = ({ navigation }) => {
     const amountNum = parseInt(amount);
 
     if (!amountNum || amountNum <= 0) {
-      Alert.alert('Error', 'Please enter a valid amount');
+      Alert.alert(t('common.error'), t('withdrawals.enterValidAmount'));
       return;
     }
 
     if (amountNum > (earnings?.wallet?.availableBalance || 0)) {
-      Alert.alert('Error', 'Insufficient balance');
+      Alert.alert(t('common.error'), t('withdrawals.insufficientBalance'));
       return;
     }
 
@@ -83,11 +85,11 @@ const WithdrawalsScreen = ({ navigation }) => {
       if (response.success) {
         setShowWithdrawModal(false);
         setAmount('');
-        Alert.alert('Success', 'Withdrawal request submitted. It will be processed shortly.');
+        Alert.alert(t('common.success'), t('withdrawals.withdrawalSubmitted'));
         fetchData();
       }
     } catch (error) {
-      Alert.alert('Error', error.message || 'Failed to submit withdrawal request');
+      Alert.alert(t('common.error'), error.message || t('withdrawals.failedToSubmit'));
     } finally {
       setSubmitting(false);
     }
@@ -109,11 +111,11 @@ const WithdrawalsScreen = ({ navigation }) => {
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      pending: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Pending' },
-      approved: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Approved' },
-      completed: { bg: 'bg-green-100', text: 'text-green-800', label: 'Completed' },
-      rejected: { bg: 'bg-red-100', text: 'text-red-800', label: 'Rejected' },
-      failed: { bg: 'bg-red-100', text: 'text-red-800', label: 'Failed' },
+      pending: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: t('withdrawals.status.pending') },
+      approved: { bg: 'bg-blue-100', text: 'text-blue-800', label: t('withdrawals.status.approved') },
+      completed: { bg: 'bg-green-100', text: 'text-green-800', label: t('withdrawals.status.completed') },
+      rejected: { bg: 'bg-red-100', text: 'text-red-800', label: t('withdrawals.status.rejected') },
+      failed: { bg: 'bg-red-100', text: 'text-red-800', label: t('withdrawals.status.failed') },
     };
 
     const config = statusConfig[status] || statusConfig.pending;
@@ -164,7 +166,7 @@ const WithdrawalsScreen = ({ navigation }) => {
               className="text-xl font-bold text-gray-900"
               style={{ fontFamily: 'Poppins-Bold' }}
             >
-              Withdrawals
+              {t('withdrawals.title')}
             </Text>
           </View>
         </View>
@@ -176,7 +178,7 @@ const WithdrawalsScreen = ({ navigation }) => {
               className="text-white/80 text-sm"
               style={{ fontFamily: 'Poppins-Regular' }}
             >
-              Available to Withdraw
+              {t('withdrawals.availableToWithdraw')}
             </Text>
             <Text
               className="text-white text-2xl font-bold mt-1"
@@ -194,7 +196,7 @@ const WithdrawalsScreen = ({ navigation }) => {
                 className="text-primary font-semibold"
                 style={{ fontFamily: 'Poppins-SemiBold' }}
               >
-                Request Withdrawal
+                {t('withdrawals.requestWithdrawal')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -206,7 +208,7 @@ const WithdrawalsScreen = ({ navigation }) => {
             className="text-lg font-semibold text-gray-900 mb-3"
             style={{ fontFamily: 'Poppins-SemiBold' }}
           >
-            Withdrawal History
+            {t('withdrawals.withdrawalHistory')}
           </Text>
 
           {withdrawals.length > 0 ? (
@@ -230,7 +232,7 @@ const WithdrawalsScreen = ({ navigation }) => {
                       className="text-gray-900 font-medium ml-2"
                       style={{ fontFamily: 'Poppins-Medium' }}
                     >
-                      {withdrawal.method === 'mobile_money' ? 'Mobile Money' : 'Bank Transfer'}
+                      {withdrawal.method === 'mobile_money' ? t('earnings.mobileMoney') : t('earnings.bankTransfer')}
                     </Text>
                   </View>
                   {getStatusBadge(withdrawal.status)}
@@ -259,7 +261,7 @@ const WithdrawalsScreen = ({ navigation }) => {
                 className="text-gray-500 mt-2 text-center"
                 style={{ fontFamily: 'Poppins-Regular' }}
               >
-                No withdrawals yet
+                {t('withdrawals.noWithdrawals')}
               </Text>
             </View>
           )}
@@ -285,7 +287,7 @@ const WithdrawalsScreen = ({ navigation }) => {
                 className="text-xl font-bold text-gray-900"
                 style={{ fontFamily: 'Poppins-Bold' }}
               >
-                Request Withdrawal
+                {t('withdrawals.requestWithdrawal')}
               </Text>
               <TouchableOpacity onPress={() => setShowWithdrawModal(false)}>
                 <Ionicons name="close" size={24} color={COLORS.textSecondary} />
@@ -297,7 +299,7 @@ const WithdrawalsScreen = ({ navigation }) => {
               className="text-gray-600 mb-2"
               style={{ fontFamily: 'Poppins-Medium' }}
             >
-              Amount
+              {t('withdrawals.amount')}
             </Text>
             <View className="flex-row items-center border border-gray-300 rounded-xl px-4 py-3 mb-4">
               <TextInput
@@ -320,7 +322,7 @@ const WithdrawalsScreen = ({ navigation }) => {
               className="text-sm text-gray-500 mb-4"
               style={{ fontFamily: 'Poppins-Regular' }}
             >
-              Available: {formatCurrency(earnings?.wallet?.availableBalance)}
+              {t('withdrawals.available', { amount: formatCurrency(earnings?.wallet?.availableBalance) })}
             </Text>
 
             {/* Method */}
@@ -328,7 +330,7 @@ const WithdrawalsScreen = ({ navigation }) => {
               className="text-gray-600 mb-2"
               style={{ fontFamily: 'Poppins-Medium' }}
             >
-              Withdrawal Method
+              {t('withdrawals.withdrawalMethod')}
             </Text>
             <View className="flex-row mb-6">
               <TouchableOpacity
@@ -348,7 +350,7 @@ const WithdrawalsScreen = ({ navigation }) => {
                   }`}
                   style={{ fontFamily: 'Poppins-Medium' }}
                 >
-                  Mobile Money
+                  {t('earnings.mobileMoney')}
                 </Text>
               </TouchableOpacity>
 
@@ -369,13 +371,13 @@ const WithdrawalsScreen = ({ navigation }) => {
                   }`}
                   style={{ fontFamily: 'Poppins-Medium' }}
                 >
-                  Bank Transfer
+                  {t('earnings.bankTransfer')}
                 </Text>
               </TouchableOpacity>
             </View>
 
             <Button
-              title="Submit Request"
+              title={t('withdrawals.submitRequest')}
               onPress={handleWithdraw}
               disabled={!amount || parseInt(amount) <= 0}
               loading={submitting}

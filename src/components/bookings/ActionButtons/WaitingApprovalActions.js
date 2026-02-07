@@ -6,6 +6,7 @@
 import React from 'react';
 import { View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import Button from '../../common/Button';
 import { CustomerAnswersCard } from '../index';
 import TimeoutMessage from './TimeoutMessage';
@@ -18,11 +19,13 @@ const WaitingApprovalActions = ({
   onAccept,
   onReject,
 }) => {
+  const { t } = useTranslation();
+
   if (isTimedOut) {
     return (
       <TimeoutMessage
-        title="Request Timed Out"
-        message="You did not respond in time. This booking is no longer available."
+        title={t('actionButtons.requestTimedOut')}
+        message={t('actionButtons.requestTimedOutDesc')}
       />
     );
   }
@@ -34,7 +37,7 @@ const WaitingApprovalActions = ({
       <View className="flex-row space-x-3">
         <View className="flex-1 mr-2">
           <Button
-            title="Accept"
+            title={t('actionButtons.accept')}
             onPress={onAccept}
             loading={actionLoading}
             variant="success"
@@ -43,7 +46,7 @@ const WaitingApprovalActions = ({
         </View>
         <View className="flex-1">
           <Button
-            title="Reject"
+            title={t('actionButtons.reject')}
             onPress={onReject}
             variant="danger"
             icon={<Ionicons name="close-circle-outline" size={20} color="#FFFFFF" />}

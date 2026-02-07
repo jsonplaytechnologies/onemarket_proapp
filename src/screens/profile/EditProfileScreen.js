@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { useTranslation } from 'react-i18next';
 import apiService from '../../services/api';
 import { API_ENDPOINTS } from '../../constants/api';
 import { COLORS } from '../../constants/colors';
@@ -21,6 +22,7 @@ import Input from '../../components/common/Input';
 import { useAuth } from '../../context/AuthContext';
 
 const EditProfileScreen = ({ navigation }) => {
+  const { t } = useTranslation();
   const { updateUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -66,7 +68,7 @@ const EditProfileScreen = ({ navigation }) => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (!permissionResult.granted) {
-      Alert.alert('Permission Required', 'Please allow access to your photos.');
+      Alert.alert(t('permissions.permissionRequired'), t('permissions.photoAccess'));
       return;
     }
 
@@ -84,7 +86,7 @@ const EditProfileScreen = ({ navigation }) => {
 
   const handleSave = async () => {
     if (!firstName || !lastName) {
-      Alert.alert('Error', 'Please fill in required fields');
+      Alert.alert(t('common.error'), t('editProfile.fillRequired'));
       return;
     }
 
@@ -114,11 +116,11 @@ const EditProfileScreen = ({ navigation }) => {
       const response = await apiService.patch(API_ENDPOINTS.PRO_PROFILE, formData);
 
       if (response.success) {
-        Alert.alert('Success', 'Profile updated successfully');
+        Alert.alert(t('common.success'), t('editProfile.profileUpdated'));
         navigation.goBack();
       }
     } catch (error) {
-      Alert.alert('Error', error.message || 'Failed to update profile');
+      Alert.alert(t('common.error'), error.message || t('editProfile.failedToUpdate'));
     } finally {
       setSaving(false);
     }
@@ -157,7 +159,7 @@ const EditProfileScreen = ({ navigation }) => {
               className="text-xl font-bold text-gray-900"
               style={{ fontFamily: 'Poppins-Bold' }}
             >
-              Edit Profile
+              {t('editProfile.title')}
             </Text>
           </View>
         </View>
@@ -183,7 +185,7 @@ const EditProfileScreen = ({ navigation }) => {
             className="text-sm text-primary mt-2"
             style={{ fontFamily: 'Poppins-Medium' }}
           >
-            Change Photo
+            {t('editProfile.changePhoto')}
           </Text>
         </View>
 
@@ -194,7 +196,7 @@ const EditProfileScreen = ({ navigation }) => {
             className="text-sm font-medium text-gray-500 mb-3"
             style={{ fontFamily: 'Poppins-Medium' }}
           >
-            PERSONAL INFORMATION
+            {t('editProfile.personalInformation')}
           </Text>
 
           <View className="mb-4">
@@ -202,10 +204,10 @@ const EditProfileScreen = ({ navigation }) => {
               className="text-sm font-medium text-gray-700 mb-2"
               style={{ fontFamily: 'Poppins-Medium' }}
             >
-              First Name *
+              {t('editProfile.firstName')}
             </Text>
             <Input
-              placeholder="Enter first name"
+              placeholder={t('editProfile.firstNamePlaceholder')}
               value={firstName}
               onChangeText={setFirstName}
             />
@@ -216,10 +218,10 @@ const EditProfileScreen = ({ navigation }) => {
               className="text-sm font-medium text-gray-700 mb-2"
               style={{ fontFamily: 'Poppins-Medium' }}
             >
-              Last Name *
+              {t('editProfile.lastName')}
             </Text>
             <Input
-              placeholder="Enter last name"
+              placeholder={t('editProfile.lastNamePlaceholder')}
               value={lastName}
               onChangeText={setLastName}
             />
@@ -230,10 +232,10 @@ const EditProfileScreen = ({ navigation }) => {
               className="text-sm font-medium text-gray-700 mb-2"
               style={{ fontFamily: 'Poppins-Medium' }}
             >
-              Bio
+              {t('editProfile.bio')}
             </Text>
             <Input
-              placeholder="Describe your services..."
+              placeholder={t('editProfile.bioPlaceholder')}
               value={bio}
               onChangeText={setBio}
               multiline
@@ -246,10 +248,10 @@ const EditProfileScreen = ({ navigation }) => {
               className="text-sm font-medium text-gray-700 mb-2"
               style={{ fontFamily: 'Poppins-Medium' }}
             >
-              Years of Experience
+              {t('editProfile.yearsOfExperience')}
             </Text>
             <Input
-              placeholder="e.g. 5"
+              placeholder={t('editProfile.yearsOfExperiencePlaceholder')}
               value={experienceYears}
               onChangeText={setExperienceYears}
               keyboardType="number-pad"
@@ -261,7 +263,7 @@ const EditProfileScreen = ({ navigation }) => {
             className="text-sm font-medium text-gray-500 mb-3"
             style={{ fontFamily: 'Poppins-Medium' }}
           >
-            PAYMENT INFORMATION
+            {t('editProfile.paymentInformation')}
           </Text>
 
           <View className="mb-4">
@@ -269,10 +271,10 @@ const EditProfileScreen = ({ navigation }) => {
               className="text-sm font-medium text-gray-700 mb-2"
               style={{ fontFamily: 'Poppins-Medium' }}
             >
-              Mobile Money Number
+              {t('editProfile.mobileMoneyNumber')}
             </Text>
             <Input
-              placeholder="+241 XX XXX XXXX"
+              placeholder={t('editProfile.mobileMoneyPlaceholder')}
               value={mobileMoneyNumber}
               onChangeText={setMobileMoneyNumber}
               keyboardType="phone-pad"
@@ -284,10 +286,10 @@ const EditProfileScreen = ({ navigation }) => {
               className="text-sm font-medium text-gray-700 mb-2"
               style={{ fontFamily: 'Poppins-Medium' }}
             >
-              Bank Name
+              {t('editProfile.bankName')}
             </Text>
             <Input
-              placeholder="Enter bank name"
+              placeholder={t('editProfile.bankNamePlaceholder')}
               value={bankName}
               onChangeText={setBankName}
             />
@@ -298,10 +300,10 @@ const EditProfileScreen = ({ navigation }) => {
               className="text-sm font-medium text-gray-700 mb-2"
               style={{ fontFamily: 'Poppins-Medium' }}
             >
-              Bank Account Number
+              {t('editProfile.bankAccountNumber')}
             </Text>
             <Input
-              placeholder="Enter account number"
+              placeholder={t('editProfile.accountNumberPlaceholder')}
               value={accountNumber}
               onChangeText={setAccountNumber}
               keyboardType="number-pad"
@@ -309,7 +311,7 @@ const EditProfileScreen = ({ navigation }) => {
           </View>
 
           <Button
-            title="Save Changes"
+            title={t('editProfile.saveChanges')}
             onPress={handleSave}
             loading={saving}
           />

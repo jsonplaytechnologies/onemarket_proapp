@@ -1,5 +1,5 @@
 export const API_BASE_URL =
-  'https://onemarketbackend-production-27c2.up.railway.app';
+'https://onemarketbackend-production-27c2.up.railway.app';
 // export const API_BASE_URL = 'http://192.168.29.45:5000';
 
 export const API_ENDPOINTS = {
@@ -66,6 +66,10 @@ export const API_ENDPOINTS = {
   NOTIFICATIONS_STATUS: '/api/notifications/status', // Combined endpoint for all unread counts
   NOTIFICATION_READ: (id) => `/api/notifications/${id}/read`,
   NOTIFICATIONS_READ_ALL: '/api/notifications/read-all',
+
+  // Device Tokens (Push Notifications)
+  DEVICE_TOKENS_REGISTER: '/api/device-tokens',
+  DEVICE_TOKENS_REMOVE: '/api/device-tokens',
 
   // Phase 2 - Duration Options
   BOOKING_DURATION_OPTIONS: '/api/bookings/duration-options',

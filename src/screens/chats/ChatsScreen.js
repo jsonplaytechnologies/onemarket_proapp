@@ -11,12 +11,14 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import apiService from '../../services/api';
 import { API_ENDPOINTS } from '../../constants/api';
 import { COLORS } from '../../constants/colors';
 import { useNotifications } from '../../context/NotificationContext';
 
 const ChatsScreen = ({ navigation }) => {
+  const { t } = useTranslation();
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -66,7 +68,7 @@ const ChatsScreen = ({ navigation }) => {
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
 
-    if (minutes < 1) return 'Just now';
+    if (minutes < 1) return t('chats.justNow');
     if (minutes < 60) return `${minutes}m`;
     if (hours < 24) return `${hours}h`;
     if (days < 7) return `${days}d`;
@@ -96,13 +98,13 @@ const ChatsScreen = ({ navigation }) => {
 
   const getStatusLabel = (status) => {
     const labels = {
-      accepted: 'Accepted',
-      quotation_sent: 'Quoted',
-      paid: 'Paid',
-      on_the_way: 'En Route',
-      job_started: 'In Progress',
-      job_start_requested: 'Start Pending',
-      job_complete_requested: 'Complete Pending',
+      accepted: t('chats.accepted'),
+      quotation_sent: t('chats.quoted'),
+      paid: t('chats.paid'),
+      on_the_way: t('chats.enRoute'),
+      job_started: t('chats.inProgress'),
+      job_start_requested: t('chats.startPending'),
+      job_complete_requested: t('chats.completePending'),
     };
     return labels[status] || status;
   };
@@ -187,7 +189,7 @@ const ChatsScreen = ({ navigation }) => {
             style={{ fontFamily: hasUnread ? 'Poppins-Medium' : 'Poppins-Regular' }}
             numberOfLines={1}
           >
-            {item.last_message || 'No messages yet'}
+            {item.last_message || t('chats.noMessagesYet')}
           </Text>
         </View>
 
@@ -215,13 +217,13 @@ const ChatsScreen = ({ navigation }) => {
         className="text-xl font-semibold text-gray-900 text-center"
         style={{ fontFamily: 'Poppins-SemiBold' }}
       >
-        No Active Chats
+        {t('chats.noActiveChats')}
       </Text>
       <Text
         className="text-base text-gray-500 text-center mt-2"
         style={{ fontFamily: 'Poppins-Regular' }}
       >
-        Chats with customers will appear here once you accept bookings
+        {t('chats.chatsAppearHere')}
       </Text>
     </View>
   );
@@ -234,7 +236,7 @@ const ChatsScreen = ({ navigation }) => {
             className="text-2xl text-gray-900"
             style={{ fontFamily: 'Poppins-Bold' }}
           >
-            Chats
+            {t('chats.title')}
           </Text>
         </View>
         <View className="flex-1 items-center justify-center">
@@ -252,7 +254,7 @@ const ChatsScreen = ({ navigation }) => {
           className="text-2xl text-gray-900"
           style={{ fontFamily: 'Poppins-Bold' }}
         >
-          Chats
+          {t('chats.title')}
         </Text>
       </View>
 

@@ -10,11 +10,13 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import apiService from '../../services/api';
 import { API_ENDPOINTS } from '../../constants/api';
 import { COLORS } from '../../constants/colors';
 
 const ReviewsScreen = ({ navigation }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [reviews, setReviews] = useState([]);
@@ -77,7 +79,7 @@ const ReviewsScreen = ({ navigation }) => {
     if (item.user?.firstName) {
       return `${item.user.firstName} ${item.user.lastName || ''}`.trim();
     }
-    return 'Customer';
+    return t('bookingCard.customer');
   };
 
   // Get user avatar from various possible field formats
@@ -157,13 +159,13 @@ const ReviewsScreen = ({ navigation }) => {
         className="text-xl font-semibold text-gray-900 mt-4 text-center"
         style={{ fontFamily: 'Poppins-SemiBold' }}
       >
-        No Reviews Yet
+        {t('reviews.noReviewsYet')}
       </Text>
       <Text
         className="text-base text-gray-500 text-center mt-2"
         style={{ fontFamily: 'Poppins-Regular' }}
       >
-        Complete jobs to receive reviews from customers
+        {t('reviews.noReviewsDesc')}
       </Text>
     </View>
   );
@@ -191,7 +193,7 @@ const ReviewsScreen = ({ navigation }) => {
             className="text-xl font-bold text-gray-900"
             style={{ fontFamily: 'Poppins-Bold' }}
           >
-            Reviews
+            {t('reviews.title')}
           </Text>
         </View>
       </View>
@@ -224,7 +226,7 @@ const ReviewsScreen = ({ navigation }) => {
                       className="text-sm text-gray-500 mt-1"
                       style={{ fontFamily: 'Poppins-Regular' }}
                     >
-                      {summary.totalReviews || 0} reviews
+                      {t('reviews.reviewsCount', { count: summary.totalReviews || 0 })}
                     </Text>
                   </View>
 

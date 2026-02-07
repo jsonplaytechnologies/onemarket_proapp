@@ -9,11 +9,13 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import apiService from '../../services/api';
 import { API_ENDPOINTS } from '../../constants/api';
 import { COLORS } from '../../constants/colors';
 
 const TransactionsScreen = ({ navigation }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [transactions, setTransactions] = useState([]);
@@ -122,12 +124,12 @@ const TransactionsScreen = ({ navigation }) => {
             style={{ fontFamily: 'Poppins-Medium' }}
           >
             {item.type === 'earning' || item.type === 'credit'
-              ? 'Job Completed'
+              ? t('transactions.jobCompleted')
               : item.type === 'withdrawal' || item.type === 'debit'
-              ? 'Withdrawal'
+              ? t('transactions.withdrawal')
               : item.type === 'commission'
-              ? 'Platform Fee'
-              : 'Transaction'}
+              ? t('transactions.platformFee')
+              : t('transactions.transaction')}
           </Text>
           <Text
             className="text-sm text-gray-500"
@@ -157,13 +159,13 @@ const TransactionsScreen = ({ navigation }) => {
         className="text-xl font-semibold text-gray-900 mt-4 text-center"
         style={{ fontFamily: 'Poppins-SemiBold' }}
       >
-        No Transactions
+        {t('transactions.noTransactions')}
       </Text>
       <Text
         className="text-base text-gray-500 text-center mt-2"
         style={{ fontFamily: 'Poppins-Regular' }}
       >
-        Your transaction history will appear here
+        {t('transactions.historyAppearHere')}
       </Text>
     </View>
   );
@@ -201,7 +203,7 @@ const TransactionsScreen = ({ navigation }) => {
             className="text-xl font-bold text-gray-900"
             style={{ fontFamily: 'Poppins-Bold' }}
           >
-            Transaction History
+            {t('transactions.title')}
           </Text>
         </View>
       </View>

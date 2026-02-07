@@ -10,11 +10,13 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import apiService from '../../services/api';
 import { API_ENDPOINTS } from '../../constants/api';
 import { COLORS } from '../../constants/colors';
 
 const MyZonesScreen = ({ navigation }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [allZones, setAllZones] = useState([]);
@@ -79,7 +81,7 @@ const MyZonesScreen = ({ navigation }) => {
         await apiService.delete(API_ENDPOINTS.MY_ZONE(myZone.id));
         fetchData();
       } catch (error) {
-        Alert.alert('Error', error.message || 'Failed to remove zone');
+        Alert.alert(t('common.error'), error.message || t('zones.failedToRemove'));
       } finally {
         setSaving(false);
       }
@@ -94,7 +96,7 @@ const MyZonesScreen = ({ navigation }) => {
         await apiService.post(API_ENDPOINTS.MY_ZONES, payload);
         fetchData();
       } catch (error) {
-        Alert.alert('Error', error.message || 'Failed to add zone');
+        Alert.alert(t('common.error'), error.message || t('zones.failedToAdd'));
       } finally {
         setSaving(false);
       }
@@ -142,7 +144,7 @@ const MyZonesScreen = ({ navigation }) => {
       }
       fetchData();
     } catch (error) {
-      Alert.alert('Error', error.message || 'Failed to update zones');
+      Alert.alert(t('common.error'), error.message || t('zones.failedToUpdate'));
     } finally {
       setSaving(false);
     }
@@ -172,13 +174,15 @@ const MyZonesScreen = ({ navigation }) => {
               className="text-xl font-bold text-gray-900"
               style={{ fontFamily: 'Poppins-Bold' }}
             >
-              Coverage Zones
+              {t('zones.title')}
             </Text>
             <Text
               className="text-sm text-gray-500"
               style={{ fontFamily: 'Poppins-Regular' }}
             >
-              {myZones.length} zone{myZones.length !== 1 ? 's' : ''} selected
+              {myZones.length !== 1
+                ? t('zones.zonesSelectedPlural', { count: myZones.length })
+                : t('zones.zonesSelected', { count: myZones.length })}
             </Text>
           </View>
         </View>
@@ -202,7 +206,7 @@ const MyZonesScreen = ({ navigation }) => {
               className="text-sm font-medium text-gray-500 mb-2"
               style={{ fontFamily: 'Poppins-Medium' }}
             >
-              YOUR ZONES
+              {t('zones.yourZones')}
             </Text>
             <View className="bg-white rounded-xl border border-gray-200 overflow-hidden">
               {myZones.map((zone, index) => (
@@ -258,7 +262,7 @@ const MyZonesScreen = ({ navigation }) => {
             className="text-sm font-medium text-gray-500 mb-2"
             style={{ fontFamily: 'Poppins-Medium' }}
           >
-            AVAILABLE ZONES
+            {t('zones.availableZones')}
           </Text>
 
           {allZones.map((zone) => {
@@ -306,7 +310,7 @@ const MyZonesScreen = ({ navigation }) => {
                         className="text-xs text-green-600 mt-1"
                         style={{ fontFamily: 'Poppins-Medium' }}
                       >
-                        {selectedCount} selected
+                        {t('zones.selected', { count: selectedCount })}
                       </Text>
                     )}
                   </View>
@@ -340,7 +344,7 @@ const MyZonesScreen = ({ navigation }) => {
                           className="text-sm text-primary font-medium"
                           style={{ fontFamily: 'Poppins-Medium' }}
                         >
-                          {areAllSubZonesSelected(zone) ? 'Deselect All' : 'Select All'}
+                          {areAllSubZonesSelected(zone) ? t('zones.deselectAll') : t('zones.selectAll')}
                         </Text>
                       </View>
                       <Ionicons

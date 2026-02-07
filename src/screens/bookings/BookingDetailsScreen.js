@@ -16,6 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import apiService, { ApiError } from '../../services/api';
 import { API_ENDPOINTS } from '../../constants/api';
 import { COLORS } from '../../constants/colors';
@@ -34,6 +35,7 @@ import { handleApiError } from '../../utils/errorHandler';
 // StarRating component has been moved to ActionButtons/CompletedActions.js
 
 const BookingDetailsScreen = ({ navigation, route }) => {
+  const { t } = useTranslation();
   const { bookingId } = route.params;
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -104,7 +106,7 @@ const BookingDetailsScreen = ({ navigation, route }) => {
     } catch (error) {
       console.error('Error fetching booking:', error);
       if (isMountedRef.current) {
-        Alert.alert('Error', 'Failed to load booking details');
+        Alert.alert(t('common.error'), t('common.failedToLoad'));
       }
     } finally {
       isFetchingRef.current = false;
@@ -130,7 +132,7 @@ const BookingDetailsScreen = ({ navigation, route }) => {
     setActionLoading(true);
     try {
       const response = await apiService.patch(API_ENDPOINTS.BOOKING_ACCEPT_ASSIGNMENT(bookingId));
-      Alert.alert('Success', 'Assignment accepted! Discuss scope with customer before sending quote.');
+      Alert.alert(t('common.success'), t('bookings.actions.assignmentAccepted'));
       // Update booking locally - socket will also update but this provides instant feedback
       if (response.data?.booking) {
         setBooking((prev) => ({ ...prev, ...response.data.booking }));
@@ -147,7 +149,7 @@ const BookingDetailsScreen = ({ navigation, route }) => {
   // Phase 2: Reject Assignment
   const handleRejectAssignment = async () => {
     if (!rejectReason) {
-      Alert.alert('Error', 'Please provide a reason for rejection');
+      Alert.alert(t('common.error'), t('bookings.actions.provideReason'));
       return;
     }
 
@@ -157,7 +159,7 @@ const BookingDetailsScreen = ({ navigation, route }) => {
         reason: rejectReason,
       });
       setShowRejectModal(false);
-      Alert.alert('Assignment Rejected', 'The booking has been rejected and reassigned.');
+      Alert.alert(t('bookings.actions.rejectBooking'), t('bookings.actions.assignmentRejected'));
       navigation.goBack();
     } catch (error) {
       handleApiError(error, 'Failed to reject assignment');
@@ -182,7 +184,7 @@ const BookingDetailsScreen = ({ navigation, route }) => {
         durationMinutes,
       });
       setShowQuotationModal(false);
-      Alert.alert('Success', 'Quote sent to customer');
+      Alert.alert(t('common.success'), t('bookings.actions.quoteSent'));
       // Update locally - socket will broadcast status change
       setBooking((prev) => ({
         ...prev,
@@ -201,7 +203,7 @@ const BookingDetailsScreen = ({ navigation, route }) => {
     setActionLoading(true);
     try {
       await apiService.patch(API_ENDPOINTS.BOOKING_ON_THE_WAY(bookingId));
-      Alert.alert('Success', 'Customer notified that you are on the way');
+      Alert.alert(t('common.success'), t('bookings.actions.customerNotified'));
       // Update locally - socket will broadcast status change
       setBooking((prev) => ({ ...prev, status: 'on_the_way' }));
     } catch (error) {
@@ -215,7 +217,7 @@ const BookingDetailsScreen = ({ navigation, route }) => {
     setActionLoading(true);
     try {
       await apiService.patch(API_ENDPOINTS.BOOKING_START(bookingId));
-      Alert.alert('Success', 'Job start request sent. Waiting for customer confirmation.');
+      Alert.alert(t('common.success'), t('bookings.actions.startRequested'));
       // Update locally - socket will broadcast status change
       setBooking((prev) => ({ ...prev, status: 'job_start_requested' }));
     } catch (error) {
@@ -229,7 +231,7 @@ const BookingDetailsScreen = ({ navigation, route }) => {
     setActionLoading(true);
     try {
       await apiService.patch(API_ENDPOINTS.BOOKING_COMPLETE(bookingId));
-      Alert.alert('Success', 'Completion request sent. Waiting for customer confirmation.');
+      Alert.alert(t('common.success'), t('bookings.actions.completionRequested'));
       // Update locally - socket will broadcast status change
       setBooking((prev) => ({ ...prev, status: 'job_complete_requested' }));
     } catch (error) {
@@ -286,9 +288,9 @@ const BookingDetailsScreen = ({ navigation, route }) => {
     });
 
     if (dateOnly.getTime() === today.getTime()) {
-      return `Today at ${time}`;
+      return `${t('schedule.today')} at ${time}`;
     } else if (dateOnly.getTime() === tomorrow.getTime()) {
-      return `Tomorrow at ${time}`;
+      return `${t('schedule.tomorrow')} at ${time}`;
     } else {
       return `${date.toLocaleDateString('en-US', {
         weekday: 'short',
@@ -341,7 +343,7 @@ const BookingDetailsScreen = ({ navigation, route }) => {
   if (!booking) {
     return (
       <View className="flex-1 bg-white items-center justify-center">
-        <Text className="text-gray-500">Booking not found</Text>
+        <Text className="text-gray-500">{t('bookings.details.bookingNotFound')}</Text>
       </View>
     );
   }
@@ -367,7 +369,7 @@ const BookingDetailsScreen = ({ navigation, route }) => {
                 className="text-xl font-bold text-gray-900"
                 style={{ fontFamily: 'Poppins-Bold' }}
               >
-                Booking Details
+                {t('bookings.details.title')}
               </Text>
               <Text
                 className="text-sm text-gray-500"
@@ -386,7 +388,7 @@ const BookingDetailsScreen = ({ navigation, route }) => {
             className="text-sm text-gray-500 mb-3"
             style={{ fontFamily: 'Poppins-Medium' }}
           >
-            CUSTOMER
+            {t('bookings.details.customer')}
           </Text>
           <View className="flex-row items-center">
             {booking.user_avatar ? (
@@ -454,7 +456,7 @@ const BookingDetailsScreen = ({ navigation, route }) => {
                   marginLeft: 8,
                 }}
               >
-                {booking.booking_path === 'auto' ? 'Auto-Selected' : 'Manually Selected'}
+                {booking.booking_path === 'auto' ? t('bookings.details.autoSelected') : t('bookings.details.manuallySelected')}
               </Text>
             </View>
           </View>
@@ -476,13 +478,13 @@ const BookingDetailsScreen = ({ navigation, route }) => {
                   className="text-gray-500"
                   style={{ fontFamily: 'Poppins-Regular', fontSize: 12 }}
                 >
-                  {booking.is_book_now ? 'Immediate Request' : 'Scheduled for'}
+                  {booking.is_book_now ? t('bookings.details.immediateRequest') : t('bookings.details.scheduledFor')}
                 </Text>
                 <Text
                   className={booking.is_book_now ? 'text-red-600' : 'text-gray-900'}
                   style={{ fontFamily: 'Poppins-SemiBold', fontSize: 18 }}
                 >
-                  {booking.is_book_now ? 'ASAP - As Soon As Possible' : formatScheduledDateTime(booking.requested_datetime)}
+                  {booking.is_book_now ? t('bookings.details.asap') : formatScheduledDateTime(booking.requested_datetime)}
                 </Text>
               </View>
             </View>
@@ -496,10 +498,10 @@ const BookingDetailsScreen = ({ navigation, route }) => {
               timeoutAt={booking.limbo_timeout_at}
               label={
                 booking.status === 'waiting_approval'
-                  ? 'Time to Accept/Reject'
+                  ? t('bookings.details.timeToAccept')
                   : booking.status === 'waiting_quote'
-                  ? 'Time to Submit Quote'
-                  : 'Customer Response Time'
+                  ? t('bookings.details.timeToSubmitQuote')
+                  : t('bookings.details.customerResponseTime')
               }
               onTimeout={handleTimeout}
             />
@@ -512,7 +514,7 @@ const BookingDetailsScreen = ({ navigation, route }) => {
             className="text-sm text-gray-500 mb-3"
             style={{ fontFamily: 'Poppins-Medium' }}
           >
-            SERVICE
+            {t('bookings.details.service')}
           </Text>
           <Text
             className="text-lg font-semibold text-gray-900"
@@ -537,7 +539,7 @@ const BookingDetailsScreen = ({ navigation, route }) => {
               className="text-sm text-gray-500 mb-3"
               style={{ fontFamily: 'Poppins-Medium' }}
             >
-              SERVICE DETAILS
+              {t('bookings.details.serviceDetails')}
             </Text>
             {booking.answers.map((answer, index) => (
               <View key={index} className={index > 0 ? 'mt-3 pt-3 border-t border-gray-100' : ''}>
@@ -565,7 +567,7 @@ const BookingDetailsScreen = ({ navigation, route }) => {
               className="text-sm text-gray-500 mb-2"
               style={{ fontFamily: 'Poppins-Medium' }}
             >
-              CUSTOMER DESCRIPTION
+              {t('bookings.details.customerDescription')}
             </Text>
             <Text
               className="text-gray-900"
@@ -583,7 +585,7 @@ const BookingDetailsScreen = ({ navigation, route }) => {
               className="text-sm text-gray-500 mb-2"
               style={{ fontFamily: 'Poppins-Medium' }}
             >
-              CUSTOMER NOTE
+              {t('bookings.details.customerNote')}
             </Text>
             <Text
               className="text-gray-900"
@@ -602,7 +604,7 @@ const BookingDetailsScreen = ({ navigation, route }) => {
                 className="text-sm text-gray-500"
                 style={{ fontFamily: 'Poppins-Medium' }}
               >
-                LOCATION
+                {t('bookings.details.location')}
               </Text>
               {booking.user_lat && ['paid', 'on_the_way', 'job_start_requested', 'job_started', 'job_complete_requested'].includes(booking.status) && (
                 <TouchableOpacity
@@ -614,7 +616,7 @@ const BookingDetailsScreen = ({ navigation, route }) => {
                     className="text-primary text-sm ml-1"
                     style={{ fontFamily: 'Poppins-Medium' }}
                   >
-                    Open Maps
+                    {t('bookings.details.openMaps')}
                   </Text>
                 </TouchableOpacity>
               )}
@@ -648,14 +650,14 @@ const BookingDetailsScreen = ({ navigation, route }) => {
             className="text-sm text-gray-500 mb-3"
             style={{ fontFamily: 'Poppins-Medium' }}
           >
-            PAYMENT
+            {t('bookings.details.payment')}
           </Text>
           <View className="flex-row justify-between items-center mb-2">
             <Text
               className="text-gray-600"
               style={{ fontFamily: 'Poppins-Regular' }}
             >
-              Quotation Amount
+              {t('bookings.details.quotationAmount')}
             </Text>
             <Text
               className="text-gray-900 font-semibold"
@@ -670,7 +672,7 @@ const BookingDetailsScreen = ({ navigation, route }) => {
                 className="text-gray-600"
                 style={{ fontFamily: 'Poppins-Regular' }}
               >
-                Platform Fee ({booking.commission_percentage}%)
+                {t('bookings.details.platformFee', { percent: booking.commission_percentage })}
               </Text>
               <Text
                 className="text-red-500"
@@ -686,7 +688,7 @@ const BookingDetailsScreen = ({ navigation, route }) => {
                 className="text-gray-900 font-semibold"
                 style={{ fontFamily: 'Poppins-SemiBold' }}
               >
-                Your Earnings
+                {t('bookings.details.yourEarnings')}
               </Text>
               <Text
                 className="text-green-600 font-bold text-lg"
@@ -704,13 +706,13 @@ const BookingDetailsScreen = ({ navigation, route }) => {
             className="text-sm text-gray-500 mb-3"
             style={{ fontFamily: 'Poppins-Medium' }}
           >
-            TIMELINE
+            {t('bookings.details.timeline')}
           </Text>
           {[
-            { label: 'Created', time: booking.created_at },
-            { label: 'Accepted', time: booking.accepted_at },
-            { label: 'Paid', time: booking.paid_at },
-            { label: 'Completed', time: booking.completed_at },
+            { label: t('bookings.details.created'), time: booking.created_at },
+            { label: t('bookings.details.accepted'), time: booking.accepted_at },
+            { label: t('bookings.details.paid'), time: booking.paid_at },
+            { label: t('bookings.details.completed'), time: booking.completed_at },
           ]
             .filter((item) => item.time)
             .map((item, index) => (
@@ -739,7 +741,7 @@ const BookingDetailsScreen = ({ navigation, route }) => {
         {['waiting_acceptance', 'paid', 'on_the_way', 'job_start_requested', 'job_started', 'job_complete_requested'].includes(booking.status) && (
           <View className="mx-4 mb-8">
             <Button
-              title="Chat with Customer"
+              title={t('bookings.details.chatWithCustomer')}
               onPress={() => navigation.navigate('Chat', { bookingId, booking })}
               variant="secondary"
               icon={<Ionicons name="chatbubble-outline" size={20} color={COLORS.primary} />}
@@ -774,7 +776,7 @@ const BookingDetailsScreen = ({ navigation, route }) => {
                 className="text-xl font-bold text-gray-900"
                 style={{ fontFamily: 'Poppins-Bold' }}
               >
-                Reject Booking
+                {t('bookings.actions.rejectBooking')}
               </Text>
               <TouchableOpacity onPress={() => setShowRejectModal(false)}>
                 <Ionicons name="close" size={24} color={COLORS.textSecondary} />
@@ -785,20 +787,20 @@ const BookingDetailsScreen = ({ navigation, route }) => {
               className="text-gray-600 mb-4"
               style={{ fontFamily: 'Poppins-Regular' }}
             >
-              Please provide a reason for rejection:
+              {t('bookings.actions.rejectReason')}
             </Text>
 
             <TextInput
               className="border border-gray-300 rounded-xl px-4 py-3 mb-6 min-h-24"
               style={{ fontFamily: 'Poppins-Regular', textAlignVertical: 'top' }}
-              placeholder="Enter reason..."
+              placeholder={t('bookings.actions.enterReason')}
               value={rejectReason}
               onChangeText={setRejectReason}
               multiline
             />
 
             <Button
-              title="Reject Assignment"
+              title={t('bookings.actions.rejectAssignment')}
               onPress={handleRejectAssignment}
               disabled={!rejectReason}
               loading={actionLoading}

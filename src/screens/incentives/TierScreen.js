@@ -10,12 +10,14 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { useIncentive } from '../../context/IncentiveContext';
 import { COLORS } from '../../constants/colors';
 import { getTierInfo, formatBonusRate, PROVIDER_TIERS } from '../../services/incentiveService';
 import { TierBadge } from '../../components/incentives';
 
 const TierScreen = ({ navigation }) => {
+  const { t } = useTranslation();
   const {
     tierStatus,
     tierBenefits,
@@ -124,7 +126,7 @@ const TierScreen = ({ navigation }) => {
               className="text-gray-900"
               style={{ fontFamily: 'Poppins-Bold', fontSize: 24 }}
             >
-              Your Tier
+              {t('tiers.title')}
             </Text>
           </View>
 
@@ -161,7 +163,7 @@ const TierScreen = ({ navigation }) => {
                     color: currentTierInfo.color,
                   }}
                 >
-                  +{formatBonusRate(bonusRate)} Bonus on Earnings
+                  {t('tiers.bonusOnEarnings', { rate: formatBonusRate(bonusRate) })}
                 </Text>
               </View>
             )}
@@ -174,7 +176,7 @@ const TierScreen = ({ navigation }) => {
             className="text-gray-900 mb-3"
             style={{ fontFamily: 'Poppins-SemiBold', fontSize: 18 }}
           >
-            Your Stats
+            {t('tiers.yourStats')}
           </Text>
 
           <View className="bg-gray-50 rounded-2xl p-4">
@@ -190,7 +192,7 @@ const TierScreen = ({ navigation }) => {
                   className="text-gray-500"
                   style={{ fontFamily: 'Poppins-Regular', fontSize: 12 }}
                 >
-                  Jobs Completed
+                  {t('tiers.jobsCompleted')}
                 </Text>
               </View>
               <View className="flex-1 items-center py-2">
@@ -207,7 +209,7 @@ const TierScreen = ({ navigation }) => {
                   className="text-gray-500"
                   style={{ fontFamily: 'Poppins-Regular', fontSize: 12 }}
                 >
-                  Average Rating
+                  {t('tiers.averageRating')}
                 </Text>
               </View>
             </View>
@@ -221,7 +223,7 @@ const TierScreen = ({ navigation }) => {
               className="text-gray-900 mb-3"
               style={{ fontFamily: 'Poppins-SemiBold', fontSize: 18 }}
             >
-              Progress to {getMergedTierInfo(nextTier).name}
+              {t('tiers.progressTo', { tierName: getMergedTierInfo(nextTier).name })}
             </Text>
 
             <View className="bg-gray-50 rounded-2xl p-4">
@@ -234,7 +236,7 @@ const TierScreen = ({ navigation }) => {
                       className="text-gray-600 ml-2"
                       style={{ fontFamily: 'Poppins-Medium', fontSize: 13 }}
                     >
-                      Jobs Completed
+                      {t('tiers.jobsCompleted')}
                     </Text>
                   </View>
                   <Text
@@ -264,7 +266,7 @@ const TierScreen = ({ navigation }) => {
                       className="text-gray-600 ml-2"
                       style={{ fontFamily: 'Poppins-Medium', fontSize: 13 }}
                     >
-                      Average Rating
+                      {t('tiers.averageRating')}
                     </Text>
                   </View>
                   <Text
@@ -294,7 +296,7 @@ const TierScreen = ({ navigation }) => {
             className="text-gray-900 mb-3"
             style={{ fontFamily: 'Poppins-SemiBold', fontSize: 18 }}
           >
-            All Tiers
+            {t('tiers.allTiers')}
           </Text>
 
           {tiers.map(([tierKey, tierInfo], index) => {
@@ -339,7 +341,7 @@ const TierScreen = ({ navigation }) => {
                               color: tierInfo.color,
                             }}
                           >
-                            CURRENT
+                            {t('tiers.current')}
                           </Text>
                         </View>
                       )}
@@ -348,7 +350,7 @@ const TierScreen = ({ navigation }) => {
                       className="text-gray-500"
                       style={{ fontFamily: 'Poppins-Regular', fontSize: 12 }}
                     >
-                      {tierInfo.minJobs}+ jobs, {(Number(tierInfo.minRating) || 0).toFixed(1)}+ rating
+                      {t('tiers.jobsRequirement', { jobs: tierInfo.minJobs, rating: (Number(tierInfo.minRating) || 0).toFixed(1) })}
                     </Text>
                   </View>
                   <View className="items-end">
@@ -359,13 +361,13 @@ const TierScreen = ({ navigation }) => {
                         color: tierInfo.bonusRate > 0 ? '#16A34A' : '#9CA3AF',
                       }}
                     >
-                      {tierInfo.bonusRate > 0 ? `+${formatBonusRate(tierInfo.bonusRate)}` : 'No Bonus'}
+                      {tierInfo.bonusRate > 0 ? `+${formatBonusRate(tierInfo.bonusRate)}` : t('tiers.noBonus')}
                     </Text>
                     <Text
                       className="text-gray-400"
                       style={{ fontFamily: 'Poppins-Regular', fontSize: 10 }}
                     >
-                      {tierInfo.bonusRate > 0 ? 'bonus' : ''}
+                      {tierInfo.bonusRate > 0 ? t('tiers.bonus') : ''}
                     </Text>
                   </View>
                 </View>
