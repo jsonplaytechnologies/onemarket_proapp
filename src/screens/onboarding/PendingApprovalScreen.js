@@ -22,7 +22,7 @@ const PendingApprovalScreen = ({ navigation }) => {
   const handleCheckStatus = async () => {
     setChecking(true);
     try {
-      const updatedUser = await fetchUserProfile();
+      const updatedUser = await fetchUserProfile(true);
 
       if (updatedUser?.approval_status === 'approved') {
         // If approved, navigation happens automatically via AppNavigator

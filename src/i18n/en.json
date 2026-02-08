@@ -87,6 +87,23 @@
       "checkingCode": "Checking code...",
       "validCode": "Valid code! You'll receive a bonus when qualified.",
       "invalidCode": "Invalid referral code",
+      "profilePhoto": "Profile Photo",
+      "profilePhotoRequired": "A profile photo is required",
+      "takePhoto": "Take Photo",
+      "chooseFromLibrary": "Choose from Library",
+      "changePhoto": "Change Photo",
+      "dateOfBirth": "Date of Birth",
+      "dateOfBirthPlaceholder": "Select your date of birth",
+      "sex": "Gender",
+      "male": "Male",
+      "female": "Female",
+      "other": "Other",
+      "heardAboutUs": "How did you hear about us?",
+      "heardSocialMedia": "Social Media",
+      "heardFriendFamily": "Friend / Family",
+      "heardGoogleSearch": "Google Search",
+      "heardAdvertisement": "Advertisement",
+      "heardOther": "Other",
       "whatHappensNext": "What happens next?",
       "nextSteps": "After creating your account, you'll need to:\n1. Upload your ID documents\n2. Add your services\n3. Select your coverage zones\n4. Wait for admin approval",
       "createAccount": "Create Account",
@@ -94,7 +111,8 @@
       "accountCreatedMessage": "Your account has been created. Complete your profile to get approved.",
       "firstNameError": "First name must be at least 2 characters",
       "lastNameError": "Last name must be at least 2 characters",
-      "bioError": "Please describe your services (at least 10 characters)"
+      "bioError": "Please describe your services (at least 10 characters)",
+      "avatarUploadFailed": "Account created but profile photo upload failed. You can update it later in your profile."
     }
   },
   "onboarding": {

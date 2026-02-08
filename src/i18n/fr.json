@@ -87,6 +87,23 @@
       "checkingCode": "Verification du code...",
       "validCode": "Code valide ! Vous recevrez un bonus une fois qualifie.",
       "invalidCode": "Code de parrainage invalide",
+      "profilePhoto": "Photo de profil",
+      "profilePhotoRequired": "Une photo de profil est requise",
+      "takePhoto": "Prendre une photo",
+      "chooseFromLibrary": "Choisir depuis la galerie",
+      "changePhoto": "Changer la photo",
+      "dateOfBirth": "Date de naissance",
+      "dateOfBirthPlaceholder": "Selectionnez votre date de naissance",
+      "sex": "Genre",
+      "male": "Homme",
+      "female": "Femme",
+      "other": "Autre",
+      "heardAboutUs": "Comment avez-vous entendu parler de nous ?",
+      "heardSocialMedia": "Reseaux sociaux",
+      "heardFriendFamily": "Ami(e) / Famille",
+      "heardGoogleSearch": "Recherche Google",
+      "heardAdvertisement": "Publicite",
+      "heardOther": "Autre",
       "whatHappensNext": "Que se passe-t-il ensuite ?",
       "nextSteps": "Apres avoir cree votre compte, vous devrez :\n1. Telecharger vos documents d'identite\n2. Ajouter vos services\n3. Selectionner vos zones de couverture\n4. Attendre l'approbation de l'administrateur",
       "createAccount": "Creer un compte",
@@ -94,7 +111,8 @@
       "accountCreatedMessage": "Votre compte a ete cree. Completez votre profil pour etre approuve.",
       "firstNameError": "Le prenom doit contenir au moins 2 caracteres",
       "lastNameError": "Le nom doit contenir au moins 2 caracteres",
-      "bioError": "Veuillez decrire vos services (au moins 10 caracteres)"
+      "bioError": "Veuillez decrire vos services (au moins 10 caracteres)",
+      "avatarUploadFailed": "Compte cree mais le telechargement de la photo a echoue. Vous pourrez la mettre a jour dans votre profil."
     }
   },
   "onboarding": {
