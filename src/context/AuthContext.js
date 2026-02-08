@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect, useContext, useRef, useCallback } from 'react';
+import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import apiService from '../services/api';
 import { API_ENDPOINTS } from '../constants/api';
@@ -17,11 +18,22 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     // Set up the onAuthExpired callback
     apiService.setOnAuthExpired(() => {
-      // Clear local state
       setToken(null);
       setUser(null);
       setIsAuthenticated(false);
-      // The navigation will automatically switch to Auth stack when isAuthenticated becomes false
+    });
+
+    // Set up the account deactivation callback
+    apiService.setOnAccountDeactivated(() => {
+      setToken(null);
+      setUser(null);
+      setIsAuthenticated(false);
+      cacheManager.clear();
+      Alert.alert(
+        'Account Deactivated',
+        'Your account has been deactivated. Please contact the One Market team.',
+        [{ text: 'OK' }]
+      );
     });
 
     checkAuthStatus();
@@ -65,6 +77,21 @@ export const AuthProvider = ({ children }) => {
       );
 
       if (response.success) {
+        // Check if account has been deactivated
+        if (response.data?.is_active === false) {
+          await apiService.clearTokens();
+          cacheManager.clear();
+          setToken(null);
+          setUser(null);
+          setIsAuthenticated(false);
+          Alert.alert(
+            'Account Deactivated',
+            'Your account has been deactivated. Please contact the One Market team.',
+            [{ text: 'OK' }]
+          );
+          return null;
+        }
+
         setUser(response.data);
         await AsyncStorage.setItem('user', JSON.stringify(response.data));
         cacheManager.set(CACHE_KEYS.PROFILE, response.data);
@@ -73,6 +100,10 @@ export const AuthProvider = ({ children }) => {
       }
       return null;
     } catch (error) {
+      // ACCOUNT_DEACTIVATED is already handled by the api service callback
+      if (error.code === 'ACCOUNT_DEACTIVATED') {
+        return null;
+      }
       console.error('Fetch user error:', error);
       return null;
     }

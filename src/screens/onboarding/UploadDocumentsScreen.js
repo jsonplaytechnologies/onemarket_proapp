@@ -17,9 +17,11 @@ import Input from '../../components/common/Input';
 import apiService from '../../services/api';
 import { API_ENDPOINTS } from '../../constants/api';
 import { COLORS } from '../../constants/colors';
+import { useAuth } from '../../context/AuthContext';
 
 const UploadDocumentsScreen = ({ navigation }) => {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [idNumber, setIdNumber] = useState('');
   const [frontImage, setFrontImage] = useState(null);
   const [backImage, setBackImage] = useState(null);
@@ -197,8 +199,12 @@ const UploadDocumentsScreen = ({ navigation }) => {
     );
   }
 
-  // If documents are submitted and pending review (no re-upload allowed unless admin requests)
-  if (hasSubmittedDocs && !canResubmit) {
+  // Allow re-upload if application hasn't been submitted yet (still incomplete) or admin requested resubmission
+  const approvalStatus = user?.approval_status;
+  const canEdit = approvalStatus === 'incomplete' || approvalStatus === 'rejected' || canResubmit;
+
+  // If documents are submitted and not editable (application already submitted and pending review)
+  if (hasSubmittedDocs && !canEdit) {
     return (
       <SafeAreaView className="flex-1 bg-white">
         <View className="px-6 pt-4">

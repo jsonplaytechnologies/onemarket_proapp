@@ -12,7 +12,7 @@ import { COLORS } from '../../constants/colors';
 
 const OnboardingHomeScreen = ({ navigation }) => {
   const { t } = useTranslation();
-  const { user, fetchUserProfile } = useAuth();
+  const { user, fetchUserProfile, logout } = useAuth();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [profile, setProfile] = useState(null);
@@ -379,6 +379,30 @@ const OnboardingHomeScreen = ({ navigation }) => {
             </View>
           </View>
         )}
+
+        {/* Logout */}
+        <View className="px-4 mb-6">
+          <TouchableOpacity
+            className="py-3 items-center"
+            onPress={() => {
+              Alert.alert(
+                t('common.logout'),
+                t('common.logoutConfirm'),
+                [
+                  { text: t('common.cancel'), style: 'cancel' },
+                  { text: t('common.logout'), style: 'destructive', onPress: logout },
+                ]
+              );
+            }}
+          >
+            <Text
+              className="text-gray-500 font-medium"
+              style={{ fontFamily: 'Poppins-Medium' }}
+            >
+              {t('common.logout')}
+            </Text>
+          </TouchableOpacity>
+        </View>
 
         <View className="h-8" />
       </ScrollView>

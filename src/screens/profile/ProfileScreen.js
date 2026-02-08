@@ -37,7 +37,7 @@ const ProfileScreen = () => {
     }
   }, [profileLastFetched]);
 
-  const isOnline = profile?.is_online || false;
+  const isOnline = user?.is_online || profile?.is_online || false;
 
   const firstName = profile?.first_name || user?.profile?.first_name || '';
   const lastName = profile?.last_name || user?.profile?.last_name || '';

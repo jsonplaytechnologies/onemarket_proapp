@@ -15,6 +15,7 @@ export class ApiError extends Error {
 
 // Callback for handling auth expiry (set by AuthContext)
 let onAuthExpired = null;
+let onAccountDeactivated = null;
 
 // Flag to prevent multiple refresh attempts
 let isRefreshing = false;
@@ -39,6 +40,11 @@ class ApiService {
   // Set callback for auth expiry handling
   setOnAuthExpired(callback) {
     onAuthExpired = callback;
+  }
+
+  // Set callback for account deactivation handling
+  setOnAccountDeactivated(callback) {
+    onAccountDeactivated = callback;
   }
 
   async getAuthToken() {
@@ -219,6 +225,19 @@ class ApiService {
             422,
             'VALIDATION_ERROR',
             validationErrors
+          );
+        }
+
+        // Handle 403 Account Deactivated
+        if (response.status === 403 && data.message && data.message.toLowerCase().includes('deactivated')) {
+          await this.clearTokens();
+          if (onAccountDeactivated) {
+            onAccountDeactivated();
+          }
+          throw new ApiError(
+            data.message,
+            403,
+            'ACCOUNT_DEACTIVATED'
           );
         }
 
