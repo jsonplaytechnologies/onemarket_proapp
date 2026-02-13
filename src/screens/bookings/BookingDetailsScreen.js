@@ -354,7 +354,12 @@ const BookingDetailsScreen = ({ navigation, route }) => {
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior="padding"
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 25}
+      >
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         {/* Header */}
         <View className="bg-white px-6 pt-4 pb-4 border-b border-gray-200">
           <View className="flex-row items-center">
@@ -749,6 +754,7 @@ const BookingDetailsScreen = ({ navigation, route }) => {
           </View>
         )}
       </ScrollView>
+      </KeyboardAvoidingView>
 
       {/* Phase 2: Quote Form Modal */}
       <QuoteFormModal
@@ -767,7 +773,7 @@ const BookingDetailsScreen = ({ navigation, route }) => {
         onRequestClose={() => setShowRejectModal(false)}
       >
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          behavior="padding"
           className="flex-1 justify-end bg-black/50"
         >
           <View className="bg-white rounded-t-3xl px-6 pt-6 pb-8">

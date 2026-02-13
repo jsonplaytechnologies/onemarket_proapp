@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -142,109 +142,115 @@ const OTPVerificationScreen = ({ navigation, route }) => {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      {/* Header */}
-      <View className="px-6 pt-4 pb-6">
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          className="w-10 h-10 items-center justify-center rounded-full bg-gray-100 mb-6"
-        >
-          <Ionicons name="arrow-back" size={22} color="#111827" />
-        </TouchableOpacity>
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 25}
+      >
+        {/* Header */}
+        <View className="px-6 pt-4 pb-6">
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            className="w-10 h-10 items-center justify-center rounded-full bg-gray-100 mb-6"
+          >
+            <Ionicons name="arrow-back" size={22} color="#111827" />
+          </TouchableOpacity>
 
-        <Text
-          className="text-2xl font-bold text-gray-900 mb-2"
-          style={{ fontFamily: 'Poppins-Bold' }}
-        >
-          {t('auth.otp.title')}
-        </Text>
+          <Text
+            className="text-2xl font-bold text-gray-900 mb-2"
+            style={{ fontFamily: 'Poppins-Bold' }}
+          >
+            {t('auth.otp.title')}
+          </Text>
 
-        <Text
-          className="text-base text-gray-500"
-          style={{ fontFamily: 'Poppins-Regular' }}
-        >
-          {t('auth.otp.subtitle')}
-        </Text>
-        <Text
-          className="text-base text-gray-900 font-semibold"
-          style={{ fontFamily: 'Poppins-SemiBold' }}
-        >
-          {fullPhone}
-        </Text>
-      </View>
+          <Text
+            className="text-base text-gray-500"
+            style={{ fontFamily: 'Poppins-Regular' }}
+          >
+            {t('auth.otp.subtitle')}
+          </Text>
+          <Text
+            className="text-base text-gray-900 font-semibold"
+            style={{ fontFamily: 'Poppins-SemiBold' }}
+          >
+            {fullPhone}
+          </Text>
+        </View>
 
-      {/* OTP Input */}
-      <View className="px-4 mt-4">
-        <OTPInput
-          length={6}
-          value={otp}
-          onChange={setOtp}
-          onComplete={handleOTPComplete}
-        />
+        {/* OTP Input */}
+        <View className="px-4 mt-4">
+          <OTPInput
+            length={6}
+            value={otp}
+            onChange={setOtp}
+            onComplete={handleOTPComplete}
+          />
 
-        {/* Error Message */}
-        {error && (
-          <View className="flex-row items-center justify-center mt-4">
-            <Ionicons name="alert-circle" size={18} color="#EF4444" />
-            <Text
-              className="text-error text-sm ml-2"
-              style={{ fontFamily: 'Poppins-Regular' }}
-            >
-              {error}
-            </Text>
-          </View>
-        )}
-
-        {/* Resend Section */}
-        <View className="items-center mt-8">
-          {countdown > 0 ? (
-            <View className="flex-row items-center">
-              <Ionicons name="time-outline" size={18} color="#6B7280" />
+          {/* Error Message */}
+          {error && (
+            <View className="flex-row items-center justify-center mt-4">
+              <Ionicons name="alert-circle" size={18} color="#EF4444" />
               <Text
-                className="text-gray-500 ml-2"
+                className="text-error text-sm ml-2"
                 style={{ fontFamily: 'Poppins-Regular' }}
               >
-                {t('auth.otp.resendIn', { seconds: countdown })}
+                {error}
               </Text>
             </View>
-          ) : (
-            <TouchableOpacity
-              onPress={handleResendOTP}
-              disabled={resendLoading}
-              className="flex-row items-center"
-            >
-              <Ionicons
-                name="refresh-outline"
-                size={18}
-                color={resendLoading ? '#9CA3AF' : '#2563EB'}
-              />
-              <Text
-                className={`ml-2 ${resendLoading ? 'text-gray-400' : 'text-primary'}`}
-                style={{ fontFamily: 'Poppins-Medium' }}
-              >
-                {resendLoading ? t('auth.otp.sending') : t('auth.otp.resend')}
-              </Text>
-            </TouchableOpacity>
           )}
-        </View>
 
-        {/* Verify Button */}
-        <View className="mt-8 px-2">
-          <Button
-            title={loading ? t('auth.otp.verifying') : t('auth.otp.verify')}
-            onPress={() => handleVerify()}
-            disabled={otp.length !== 6 || loading}
-            loading={loading}
-          />
-        </View>
+          {/* Resend Section */}
+          <View className="items-center mt-8">
+            {countdown > 0 ? (
+              <View className="flex-row items-center">
+                <Ionicons name="time-outline" size={18} color="#6B7280" />
+                <Text
+                  className="text-gray-500 ml-2"
+                  style={{ fontFamily: 'Poppins-Regular' }}
+                >
+                  {t('auth.otp.resendIn', { seconds: countdown })}
+                </Text>
+              </View>
+            ) : (
+              <TouchableOpacity
+                onPress={handleResendOTP}
+                disabled={resendLoading}
+                className="flex-row items-center"
+              >
+                <Ionicons
+                  name="refresh-outline"
+                  size={18}
+                  color={resendLoading ? '#9CA3AF' : '#2563EB'}
+                />
+                <Text
+                  className={`ml-2 ${resendLoading ? 'text-gray-400' : 'text-primary'}`}
+                  style={{ fontFamily: 'Poppins-Medium' }}
+                >
+                  {resendLoading ? t('auth.otp.sending') : t('auth.otp.resend')}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
 
-        {/* Help Text */}
-        <Text
-          className="text-sm text-gray-400 text-center mt-6"
-          style={{ fontFamily: 'Poppins-Regular' }}
-        >
-          {t('auth.otp.helpText')}
-        </Text>
-      </View>
+          {/* Verify Button */}
+          <View className="mt-8 px-2">
+            <Button
+              title={loading ? t('auth.otp.verifying') : t('auth.otp.verify')}
+              onPress={() => handleVerify()}
+              disabled={otp.length !== 6 || loading}
+              loading={loading}
+            />
+          </View>
+
+          {/* Help Text */}
+          <Text
+            className="text-sm text-gray-400 text-center mt-6"
+            style={{ fontFamily: 'Poppins-Regular' }}
+          >
+            {t('auth.otp.helpText')}
+          </Text>
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };

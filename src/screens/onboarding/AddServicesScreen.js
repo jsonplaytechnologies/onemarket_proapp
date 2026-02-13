@@ -162,6 +162,11 @@ const AddServicesScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior="padding"
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 25}
+      >
       {/* Header */}
       <View className="bg-white px-6 pt-4 pb-4 border-b border-gray-200">
         <View className="flex-row items-center">
@@ -190,7 +195,7 @@ const AddServicesScreen = ({ navigation }) => {
         </View>
       </View>
 
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         {/* My Services */}
         {myServices.length > 0 && (
           <View className="px-4 mt-4">
@@ -306,11 +311,11 @@ const AddServicesScreen = ({ navigation }) => {
           </View>
         ))}
 
-        <View className="h-32" />
+        <View className="h-4" />
       </ScrollView>
 
       {/* Save Button */}
-      <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-4">
+      <View className="bg-white border-t border-gray-200 px-6 py-4">
         <Button
           title={t('addServices.saveAndContinue')}
           onPress={() => navigation.goBack()}
@@ -318,6 +323,7 @@ const AddServicesScreen = ({ navigation }) => {
           icon={<Ionicons name="checkmark-circle-outline" size={20} color="#FFFFFF" />}
         />
       </View>
+      </KeyboardAvoidingView>
 
       {/* Price Modal */}
       <Modal
@@ -327,7 +333,7 @@ const AddServicesScreen = ({ navigation }) => {
         onRequestClose={() => setShowPriceModal(false)}
       >
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          behavior="padding"
           className="flex-1 justify-end bg-black/50"
         >
           <View className="bg-white rounded-t-3xl px-6 pt-6 pb-8">

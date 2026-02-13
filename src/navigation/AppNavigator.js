@@ -132,6 +132,7 @@ const MainTabs = () => {
         },
         tabBarActiveTintColor: '#2563EB',
         tabBarInactiveTintColor: '#6B7280',
+        tabBarHideOnKeyboard: true,
         tabBarLabelStyle: {
           fontFamily: 'Poppins-Regular',
           fontSize: 11,

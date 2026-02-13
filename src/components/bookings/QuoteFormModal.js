@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   TextInput,
   KeyboardAvoidingView,
-  Platform,
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
@@ -75,7 +74,7 @@ const QuoteFormModal = ({
       onRequestClose={handleClose}
     >
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior="padding"
         className="flex-1 justify-end bg-black/50"
       >
         <ScrollView

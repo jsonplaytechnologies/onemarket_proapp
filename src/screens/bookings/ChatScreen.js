@@ -11,6 +11,7 @@ import {
   Image,
   Modal,
   Dimensions,
+  Keyboard,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -42,9 +43,25 @@ const ChatScreen = ({ navigation, route }) => {
   const [sending, setSending] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
 
   const { messages, setMessages, isUserTyping, send, typing, isConnected } =
     useBookingSocket(bookingId);
+
+  useEffect(() => {
+    const showSub = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      () => setKeyboardVisible(true)
+    );
+    const hideSub = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => setKeyboardVisible(false)
+    );
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   useEffect(() => {
     fetchMessages();
@@ -355,9 +372,9 @@ const ChatScreen = ({ navigation, route }) => {
 
       {/* Messages */}
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior="padding"
         className="flex-1"
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 25}
+        keyboardVerticalOffset={0}
       >
         <FlatList
           ref={flatListRef}
@@ -369,6 +386,7 @@ const ChatScreen = ({ navigation, route }) => {
             paddingBottom: 8,
           }}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
           onContentSizeChange={() =>
             flatListRef.current?.scrollToEnd({ animated: false })
           }
@@ -417,7 +435,7 @@ const ChatScreen = ({ navigation, route }) => {
         {/* Input */}
         <View
           className="flex-row items-end px-4 pt-3 border-t border-gray-200 bg-white"
-          style={{ paddingBottom: Math.max(insets.bottom, 12) }}
+          style={{ paddingBottom: keyboardVisible ? 12 : Math.max(insets.bottom, 12) }}
         >
           {/* Image Picker Buttons */}
           <TouchableOpacity

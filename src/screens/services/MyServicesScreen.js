@@ -3,6 +3,7 @@ import {
   View,
   Text,
   FlatList,
+  ScrollView,
   TouchableOpacity,
   Alert,
   ActivityIndicator,
@@ -10,7 +11,6 @@ import {
   TextInput,
   Modal,
   KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -309,7 +309,7 @@ const MyServicesScreen = ({ navigation }) => {
         onRequestClose={() => setShowPriceModal(false)}
       >
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          behavior="padding"
           className="flex-1 justify-end bg-black/50"
         >
           <View className="bg-white rounded-t-3xl px-6 pt-6 pb-8">
@@ -325,43 +325,45 @@ const MyServicesScreen = ({ navigation }) => {
               </TouchableOpacity>
             </View>
 
-            <Text
-              className="text-base text-gray-700 mb-2"
-              style={{ fontFamily: 'Poppins-Medium' }}
-            >
-              {selectedService?.name || selectedService?.service_name}
-            </Text>
-
-            <Text
-              className="text-sm text-gray-500 mb-4"
-              style={{ fontFamily: 'Poppins-Regular' }}
-            >
-              {t('myServices.basePrice', { price: selectedService?.base_price?.toLocaleString() })}
-            </Text>
-
-            <View className="flex-row items-center border border-gray-300 rounded-xl px-4 py-3 mb-6">
-              <TextInput
-                className="flex-1 text-xl font-semibold text-gray-900"
-                style={{ fontFamily: 'Poppins-SemiBold' }}
-                placeholder="0"
-                value={customPrice}
-                onChangeText={setCustomPrice}
-                keyboardType="number-pad"
-              />
+            <ScrollView keyboardShouldPersistTaps="handled" bounces={false}>
               <Text
-                className="text-base text-gray-500 ml-2"
+                className="text-base text-gray-700 mb-2"
+                style={{ fontFamily: 'Poppins-Medium' }}
+              >
+                {selectedService?.name || selectedService?.service_name}
+              </Text>
+
+              <Text
+                className="text-sm text-gray-500 mb-4"
                 style={{ fontFamily: 'Poppins-Regular' }}
               >
-                XAF
+                {t('myServices.basePrice', { price: selectedService?.base_price?.toLocaleString() })}
               </Text>
-            </View>
 
-            <Button
-              title={isServiceAdded(selectedService?.id) ? t('myServices.updatePrice') : t('myServices.addService')}
-              onPress={handleAddService}
-              disabled={!customPrice}
-              loading={saving}
-            />
+              <View className="flex-row items-center border border-gray-300 rounded-xl px-4 py-3 mb-6">
+                <TextInput
+                  className="flex-1 text-xl font-semibold text-gray-900"
+                  style={{ fontFamily: 'Poppins-SemiBold' }}
+                  placeholder="0"
+                  value={customPrice}
+                  onChangeText={setCustomPrice}
+                  keyboardType="number-pad"
+                />
+                <Text
+                  className="text-base text-gray-500 ml-2"
+                  style={{ fontFamily: 'Poppins-Regular' }}
+                >
+                  XAF
+                </Text>
+              </View>
+
+              <Button
+                title={isServiceAdded(selectedService?.id) ? t('myServices.updatePrice') : t('myServices.addService')}
+                onPress={handleAddService}
+                disabled={!customPrice}
+                loading={saving}
+              />
+            </ScrollView>
           </View>
         </KeyboardAvoidingView>
       </Modal>

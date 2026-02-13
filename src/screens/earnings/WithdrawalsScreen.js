@@ -10,7 +10,6 @@ import {
   Modal,
   TextInput,
   KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -278,7 +277,7 @@ const WithdrawalsScreen = ({ navigation }) => {
         onRequestClose={() => setShowWithdrawModal(false)}
       >
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          behavior="padding"
           className="flex-1 justify-end bg-black/50"
         >
           <View className="bg-white rounded-t-3xl px-6 pt-6 pb-8">
@@ -294,94 +293,96 @@ const WithdrawalsScreen = ({ navigation }) => {
               </TouchableOpacity>
             </View>
 
-            {/* Amount */}
-            <Text
-              className="text-gray-600 mb-2"
-              style={{ fontFamily: 'Poppins-Medium' }}
-            >
-              {t('withdrawals.amount')}
-            </Text>
-            <View className="flex-row items-center border border-gray-300 rounded-xl px-4 py-3 mb-4">
-              <TextInput
-                className="flex-1 text-2xl font-semibold text-gray-900"
-                style={{ fontFamily: 'Poppins-SemiBold' }}
-                placeholder="0"
-                value={amount}
-                onChangeText={setAmount}
-                keyboardType="number-pad"
-              />
+            <ScrollView keyboardShouldPersistTaps="handled" bounces={false}>
+              {/* Amount */}
               <Text
-                className="text-base text-gray-500 ml-2"
+                className="text-gray-600 mb-2"
+                style={{ fontFamily: 'Poppins-Medium' }}
+              >
+                {t('withdrawals.amount')}
+              </Text>
+              <View className="flex-row items-center border border-gray-300 rounded-xl px-4 py-3 mb-4">
+                <TextInput
+                  className="flex-1 text-2xl font-semibold text-gray-900"
+                  style={{ fontFamily: 'Poppins-SemiBold' }}
+                  placeholder="0"
+                  value={amount}
+                  onChangeText={setAmount}
+                  keyboardType="number-pad"
+                />
+                <Text
+                  className="text-base text-gray-500 ml-2"
+                  style={{ fontFamily: 'Poppins-Regular' }}
+                >
+                  XAF
+                </Text>
+              </View>
+
+              <Text
+                className="text-sm text-gray-500 mb-4"
                 style={{ fontFamily: 'Poppins-Regular' }}
               >
-                XAF
+                {t('withdrawals.available', { amount: formatCurrency(earnings?.wallet?.availableBalance) })}
               </Text>
-            </View>
 
-            <Text
-              className="text-sm text-gray-500 mb-4"
-              style={{ fontFamily: 'Poppins-Regular' }}
-            >
-              {t('withdrawals.available', { amount: formatCurrency(earnings?.wallet?.availableBalance) })}
-            </Text>
-
-            {/* Method */}
-            <Text
-              className="text-gray-600 mb-2"
-              style={{ fontFamily: 'Poppins-Medium' }}
-            >
-              {t('withdrawals.withdrawalMethod')}
-            </Text>
-            <View className="flex-row mb-6">
-              <TouchableOpacity
-                className={`flex-1 p-4 rounded-xl mr-2 border ${
-                  method === 'mobile_money' ? 'border-primary bg-blue-50' : 'border-gray-200'
-                }`}
-                onPress={() => setMethod('mobile_money')}
+              {/* Method */}
+              <Text
+                className="text-gray-600 mb-2"
+                style={{ fontFamily: 'Poppins-Medium' }}
               >
-                <Ionicons
-                  name="phone-portrait-outline"
-                  size={24}
-                  color={method === 'mobile_money' ? COLORS.primary : COLORS.textSecondary}
-                />
-                <Text
-                  className={`mt-2 font-medium ${
-                    method === 'mobile_money' ? 'text-primary' : 'text-gray-700'
+                {t('withdrawals.withdrawalMethod')}
+              </Text>
+              <View className="flex-row mb-6">
+                <TouchableOpacity
+                  className={`flex-1 p-4 rounded-xl mr-2 border ${
+                    method === 'mobile_money' ? 'border-primary bg-blue-50' : 'border-gray-200'
                   }`}
-                  style={{ fontFamily: 'Poppins-Medium' }}
+                  onPress={() => setMethod('mobile_money')}
                 >
-                  {t('earnings.mobileMoney')}
-                </Text>
-              </TouchableOpacity>
+                  <Ionicons
+                    name="phone-portrait-outline"
+                    size={24}
+                    color={method === 'mobile_money' ? COLORS.primary : COLORS.textSecondary}
+                  />
+                  <Text
+                    className={`mt-2 font-medium ${
+                      method === 'mobile_money' ? 'text-primary' : 'text-gray-700'
+                    }`}
+                    style={{ fontFamily: 'Poppins-Medium' }}
+                  >
+                    {t('earnings.mobileMoney')}
+                  </Text>
+                </TouchableOpacity>
 
-              <TouchableOpacity
-                className={`flex-1 p-4 rounded-xl border ${
-                  method === 'bank_transfer' ? 'border-primary bg-blue-50' : 'border-gray-200'
-                }`}
-                onPress={() => setMethod('bank_transfer')}
-              >
-                <Ionicons
-                  name="business-outline"
-                  size={24}
-                  color={method === 'bank_transfer' ? COLORS.primary : COLORS.textSecondary}
-                />
-                <Text
-                  className={`mt-2 font-medium ${
-                    method === 'bank_transfer' ? 'text-primary' : 'text-gray-700'
+                <TouchableOpacity
+                  className={`flex-1 p-4 rounded-xl border ${
+                    method === 'bank_transfer' ? 'border-primary bg-blue-50' : 'border-gray-200'
                   }`}
-                  style={{ fontFamily: 'Poppins-Medium' }}
+                  onPress={() => setMethod('bank_transfer')}
                 >
-                  {t('earnings.bankTransfer')}
-                </Text>
-              </TouchableOpacity>
-            </View>
+                  <Ionicons
+                    name="business-outline"
+                    size={24}
+                    color={method === 'bank_transfer' ? COLORS.primary : COLORS.textSecondary}
+                  />
+                  <Text
+                    className={`mt-2 font-medium ${
+                      method === 'bank_transfer' ? 'text-primary' : 'text-gray-700'
+                    }`}
+                    style={{ fontFamily: 'Poppins-Medium' }}
+                  >
+                    {t('earnings.bankTransfer')}
+                  </Text>
+                </TouchableOpacity>
+              </View>
 
-            <Button
-              title={t('withdrawals.submitRequest')}
-              onPress={handleWithdraw}
-              disabled={!amount || parseInt(amount) <= 0}
-              loading={submitting}
-            />
+              <Button
+                title={t('withdrawals.submitRequest')}
+                onPress={handleWithdraw}
+                disabled={!amount || parseInt(amount) <= 0}
+                loading={submitting}
+              />
+            </ScrollView>
           </View>
         </KeyboardAvoidingView>
       </Modal>
