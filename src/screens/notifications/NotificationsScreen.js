@@ -15,6 +15,7 @@ import apiService from '../../services/api';
 import { API_ENDPOINTS } from '../../constants/api';
 import { COLORS } from '../../constants/colors';
 import { useNotifications } from '../../context/NotificationContext';
+import { getNavigationTarget } from '../../utils/notificationRouter';
 
 // Pro-specific notification icons (outline style like user app)
 const NOTIFICATION_ICONS = {
@@ -146,10 +147,10 @@ const NotificationsScreen = ({ navigation }) => {
       ));
     }
 
-    // Navigate to booking details if applicable
-    const bookingId = notification.booking_id || notification.bookingId;
-    if (bookingId) {
-      navigation.navigate('BookingDetails', { bookingId });
+    // Navigate to the relevant screen
+    const target = getNavigationTarget(notification);
+    if (target && target.screen !== 'Notifications') {
+      navigation.navigate(target.screen, target.params);
     }
   };
 

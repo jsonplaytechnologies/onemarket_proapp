@@ -17,6 +17,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useNotifications } from '../../context/NotificationContext';
 import { COLORS } from '../../constants/colors';
+import { navigateToNotification } from '../../utils/notificationRouter';
 
 const { width } = Dimensions.get('window');
 
@@ -73,14 +74,7 @@ const NotificationToast = () => {
 
   const handlePress = () => {
     hideToast();
-
-    if (toastData.bookingId) {
-      navigation.navigate('BookingDetails', { bookingId: toastData.bookingId });
-    } else if (toastData.type === 'withdrawal') {
-      navigation.navigate('Wallet');
-    } else {
-      navigation.navigate('Notifications');
-    }
+    navigateToNotification((screen, params) => navigation.navigate(screen, params), toastData);
   };
 
   const icon = getIcon();

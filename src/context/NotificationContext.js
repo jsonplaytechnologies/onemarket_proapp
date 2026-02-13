@@ -10,7 +10,8 @@ import { useAuth } from './AuthContext';
 import apiService from '../services/api';
 import { API_ENDPOINTS } from '../constants/api';
 import cacheManager, { CACHE_KEYS, CACHE_TYPES } from '../utils/cacheManager';
-import { registerForPushNotifications } from '../services/pushNotificationService';
+import { registerForPushNotifications, setupNotificationHandlers, handleInitialNotification } from '../services/pushNotificationService';
+import { navigationRef } from '../services/navigationService';
 
 // Debounce utility
 const debounce = (func, wait) => {
@@ -306,6 +307,19 @@ export const NotificationProvider = ({ children }) => {
       cacheManager.invalidate(CACHE_KEYS.UNREAD_CHATS_COUNT);
     }
   }, [isAuthenticated, user?.approval_status, fetchAllUnreadCounts]);
+
+  // Set up push notification tap handlers (background + killed state)
+  useEffect(() => {
+    if (!isAuthenticated || user?.approval_status !== 'approved') return;
+
+    // Handle taps when app is in background
+    const cleanup = setupNotificationHandlers(navigationRef);
+
+    // Handle tap that launched the app from killed state
+    handleInitialNotification(navigationRef);
+
+    return cleanup;
+  }, [isAuthenticated, user?.approval_status]);
 
   // Socket event handlers - defined with useCallback for stable references
   // NOTE: This context handles TOAST NOTIFICATIONS only. State updates are

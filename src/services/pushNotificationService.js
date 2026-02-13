@@ -6,6 +6,7 @@
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
+import { navigateToNotification } from '../utils/notificationRouter';
 
 // Configure how notifications appear when app is in foreground
 Notifications.setNotificationHandler({
@@ -63,21 +64,38 @@ export async function registerForPushNotifications() {
  * @returns {Function} cleanup function to remove listeners
  */
 export function setupNotificationHandlers(navigationRef) {
-  // Handle notification taps (app in background or killed)
+  // Handle notification taps (app in background)
   const responseSubscription = Notifications.addNotificationResponseReceivedListener(
     (response) => {
       const data = response.notification.request.content.data;
-
       if (!navigationRef?.current) return;
 
-      // Navigate based on notification type
-      if (data.bookingId) {
-        navigationRef.current.navigate('BookingDetails', { bookingId: data.bookingId });
-      }
+      navigateToNotification(
+        (screen, params) => navigationRef.current.navigate(screen, params),
+        data
+      );
     }
   );
 
   return () => {
     responseSubscription.remove();
   };
+}
+
+/**
+ * Check if the app was opened from a killed state via notification tap.
+ * Should be called once after navigation is ready.
+ * @param {Object} navigationRef - React Navigation ref
+ */
+export async function handleInitialNotification(navigationRef) {
+  const lastResponse = await Notifications.getLastNotificationResponseAsync();
+  if (!lastResponse) return;
+
+  const data = lastResponse.notification.request.content.data;
+  if (!navigationRef?.current) return;
+
+  navigateToNotification(
+    (screen, params) => navigationRef.current.navigate(screen, params),
+    data
+  );
 }
